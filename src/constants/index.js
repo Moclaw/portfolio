@@ -15,15 +15,15 @@ import {
 	RabbitMQ,
 	Redis,
 	GoogleCloud,
-	GraphQL,
-	Jaeger,
 	Jenkins,
 	Jira,
 	Kubernetes,
-	Heroku,
 	React,
 	GithubActions,
 	docker,
+	Aws,
+	Kafka,
+	mongodb
 
 } from "../assets";
 
@@ -83,14 +83,6 @@ const technologies = [
 		icon: GoogleCloud,
 	},
 	{
-		name: "GraphQL",
-		icon: GraphQL,
-	},
-	{
-		name: "Jaeger",
-		icon: Jaeger,
-	},
-	{
 		name: "Jenkins",
 		icon: Jenkins,
 	},
@@ -103,11 +95,6 @@ const technologies = [
 		icon: Kubernetes,
 	},
 	{
-		name: "Heroku",
-		icon: Heroku,
-	},
-
-	{
 		name: "React",
 		icon: React,
 	},
@@ -119,6 +106,19 @@ const technologies = [
 		name: "Docker",
 		icon: docker,
 	},
+	{
+		name: "AWS",
+		icon: Aws,
+	},
+	{
+		name: "Kafka",
+		icon: Kafka,
+	},
+	{
+		name: "MongoDB",
+		icon: mongodb,
+	},
+
 
 ];
 

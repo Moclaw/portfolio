@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { Navbar, Model3D } from './components';
+import Contact from './components/Contact';
 const Experience = lazy(() => import('./components/Experience'));
 const About = lazy(() => import('./components/About'));
 const Tech = lazy(() => import('./components/Tech'));
@@ -18,6 +19,7 @@ const App = () => {
 					<Experience />
 					<Tech />
 				</Suspense>
+				<Contact />
 			</div>
 		</BrowserRouter>
 	);
