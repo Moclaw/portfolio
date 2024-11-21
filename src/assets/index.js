@@ -34,6 +34,7 @@ import Kubernetes from "./tech/Kubernetes.png";
 import Heroku from "./tech/Heroku.png";
 import React from "./tech/React.png";
 import GithubActions from "./tech/gitaction.png";
+import mongodb from "./tech/mongodb.png";
 
 import carrent from "./carrent.png";
 import jobit from "./jobit.png";
@@ -85,6 +86,8 @@ export {
 	Heroku,
 	React,
 	GithubActions,
+	mongodb,
+	
 
 	//company icon
 	freelance,
