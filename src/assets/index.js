@@ -35,17 +35,23 @@ import Heroku from "./tech/Heroku.png";
 import React from "./tech/React.png";
 import GithubActions from "./tech/gitaction.png";
 import mongodb from "./tech/mongodb.png";
+import elasticsearch from "./tech/elasticsearch.png";
+import postgres from "./tech/postgresql.png";
+import mysql from "./tech/mysql.png";
+import sqlserver from "./tech/microsoft-sql-server.png";
+import angular from "./tech/angular.png";
 
 import carrent from "./carrent.png";
 import jobit from "./jobit.png";
 import tripguide from "./tripguide.png";
-
 
 //company icon
 import freelance from "./company/freelance.jpg";
 import maico from "./company/maico.png";
 import levinci from "./company/levinci.svg";
 import terralogic from "./company/terralogic.jfif";
+
+
 
 export {
 	logo,
@@ -87,6 +93,11 @@ export {
 	React,
 	GithubActions,
 	mongodb,
+	elasticsearch,
+	postgres,
+	mysql,
+	sqlserver,
+	angular,
 	
 
 	//company icon
