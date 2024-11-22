@@ -11,6 +11,7 @@ import {
 	levinci,
 	csharp,
 	net,
+	Ubuntu,
 	RabbitMQ,
 	Redis,
 	GoogleCloud,
@@ -22,18 +23,7 @@ import {
 	docker,
 	Aws,
 	Kafka,
-	mongodb,
-	elasticsearch,
-	postgres,
-	mysql,
-	sqlserver,
-	Cloudfare,
-	DigitalOcean,
-	GraphQL,
-	Jaeger,
-	Heroku,
-	Ubuntu,
-	angular
+	mongodb
 
 } from "../assets";
 
@@ -77,57 +67,59 @@ const technologies = [
 		icon: net,
 	},
 	{
-		name: "SQL Server",
-		icon: sqlserver,
-	},
-	{
-		name: "Postgres",
-		icon: postgres,
-	},
-	{
-		name: "MySQL",
-		icon: mysql,
-	},
-	{
-		name: "MongoDB",
-		icon: mongodb,
-	},
-	{
-		name: "Redis",
-		icon: Redis,
-	},
-	{
-		name: "Elastic Search",
-		icon: elasticsearch,
-	},
-	{
-		name: "Docker",
-		icon: docker,
+		name: "Ubuntu",
+		icon: Ubuntu,
 	},
 	{
 		name: "RabbitMQ",
 		icon: RabbitMQ,
 	},
 	{
-		name: "Kafka",
-		icon: Kafka,
-	},
-	{
-		name: "AWS",
-		icon: Aws,
+		name: "Redis",
+		icon: Redis,
 	},
 	{
 		name: "Google Cloud",
 		icon: GoogleCloud,
 	},
 	{
+		name: "Jenkins",
+		icon: Jenkins,
+	},
+	{
+		name: "Jira",
+		icon: Jira,
+	},
+	{
+		name: "Kubernetes",
+		icon: Kubernetes,
+	},
+	{
 		name: "React",
 		icon: React,
 	},
 	{
-		name: "Angular",
-		icon: angular,
-	}
+		name: "Github Actions",
+		icon: GithubActions,
+	},
+	{
+		name: "Docker",
+		icon: docker,
+	},
+	{
+		name: "AWS",
+		icon: Aws,
+	},
+	{
+		name: "Kafka",
+		icon: Kafka,
+	},
+	{
+		name: "MongoDB",
+		icon: mongodb,
+	},
+
+
 ];
 
 const experiences = [
