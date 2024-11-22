@@ -5,7 +5,8 @@ import { OrbitControls, Preload, useGLTF } from "@react-three/drei";
 import CanvasLoader from "../Loader";
 
 const Room = React.memo(({ isMobile }) => {
-  const computer = useGLTF("./room/Room.gltf", true); // Lazy load with useGLTF.preload
+  useGLTF.preload("./room/Room.gltf");
+  const computer = useGLTF("./room/Room.gltf", true);
 
   const meshRef = useRef();
 
