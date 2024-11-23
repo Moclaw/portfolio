@@ -1,12 +1,11 @@
-import React, { Suspense, useEffect, useState, useRef } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Preload, useGLTF } from "@react-three/drei";
+import React, {Suspense, useEffect, useRef, useState} from "react";
+import {Canvas, useFrame} from "@react-three/fiber";
+import {OrbitControls, Preload, useGLTF} from "@react-three/drei";
 
 import CanvasLoader from "../Loader";
 
 const Room = React.memo(({ isMobile }) => {
-  useGLTF.preload("./room/Room.gltf");
-  const computer = useGLTF("./room/Room.gltf", true);
+  const { scene } = useGLTF("./room/Room.gltf", true);
 
   const meshRef = useRef();
 
@@ -28,9 +27,9 @@ const Room = React.memo(({ isMobile }) => {
         shadow-mapSize={1024}
       />
       <pointLight intensity={1} />
-      {computer.scene && (
+      {scene && (
         <primitive
-          object={computer.scene}
+          object={scene}
           scale={isMobile ? 0.45 : 0.75}
           position={isMobile ? [0, -2, -2.2] : [0, -3.25, -1.5]}
           rotation={[-0.01, -0.2, -0.1]}
@@ -39,14 +38,11 @@ const Room = React.memo(({ isMobile }) => {
     </mesh>
   );
 });
-
 const RoomCanvas = () => {
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.matchMedia("(max-width: 400px)").matches);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 400px)");
-
-    setIsMobile(mediaQuery.matches);
 
     const handleMediaQueryChange = (event) => {
       setIsMobile(event.matches);
@@ -80,5 +76,4 @@ const RoomCanvas = () => {
     </Canvas>
   );
 };
-
 export default RoomCanvas;
