@@ -153,7 +153,7 @@ const experiences = [
 		company_name: "Levinci Co., Ltd",
 		icon: levinci,
 		iconBg: "#ffffff",
-		date: "Jan 2022 - Jan 2023",
+		date: "Jan 2022 - Aug 2023",
 		points: [
 			"Managed two critical ERP projects for finance and employee management.",
 			"Implemented comprehensive project management plans, ensuring successful goal achievement for numerous clients.",
