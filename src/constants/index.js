@@ -162,7 +162,7 @@ const experiences = [
 		],
 	},
 	{
-		title: "Full stack Developer",
+		title: "Software Engineer",
 		company_name: "Terralogic",
 		icon: terralogic,
 		iconBg: "#ffffff",
