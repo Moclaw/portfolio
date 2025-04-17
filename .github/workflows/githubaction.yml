@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout code
@@ -32,9 +32,6 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/portfolio:latest
-      - name: get host ip
-        id: get_host_ip
-        run: echo "SSH_HOST=$(curl -s ifconfig.me)" >> $GITHUB_ENV
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v0.1.5
