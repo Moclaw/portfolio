@@ -33,14 +33,9 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/portfolio:latest
 
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v0.1.5
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          script: |
-            docker pull ${{ secrets.DOCKER_USERNAME }}/portfolio:latest
-            docker stop portfolio || true
-            docker rm portfolio || true
-            docker run -d --name portfolio -p 5300:5300 ${{ secrets.DOCKER_USERNAME }}/portfolio:latest
+      - name: Deploy locally
+        run: |
+          docker pull ${{ secrets.DOCKER_USERNAME }}/portfolio:latest
+          docker stop portfolio || true
+          docker rm portfolio || true
+          docker run -d --name portfolio -p 5300:5300 ${{ secrets.DOCKER_USERNAME }}/portfolio:latest
