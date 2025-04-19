@@ -6,6 +6,7 @@ export default defineConfig({
 	server: {
 		watch: {
 		  usePolling: true,
+		  ignored: ['**/.git/**']
 		},
 		host: true, // needed for the Docker Container port mapping to work
 		strictPort: true,
