@@ -1,31 +1,31 @@
-# Build Stage
-FROM node AS builder
+# ---------- Build Stage ----------
+FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files and install dependencies in cached layer
+# Install dependencies
 COPY package*.json ./
 RUN npm ci
 
-# Copy the rest of the application and build
+# Copy source code and build
 COPY . .
-
-# Build the app
 RUN npm run build
 
-# Runner Stage
-FROM node AS runner
+
+# ---------- Production Runner Stage ----------
+FROM node:18-alpine AS runner
 
 WORKDIR /app
 
-# Copy only package files and install production dependencies
-COPY --from=builder /app/package*.json ./
+# Copy package files and install only production dependencies
+COPY package*.json ./
+RUN npm ci --only=production
 
-# Copy built files
+# Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
 
-# Expose application port
+# Expose port
 EXPOSE 5300
 
-# Start the application
-CMD ["npm", "start"]
+# Start the app
+CMD ["node", "dist/index.js"]
