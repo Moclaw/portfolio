@@ -1,31 +1,27 @@
-FROM node AS builder
+# Build Stage
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy the package.json and install dependencies
-COPY package.json .
-RUN npm install --force
+# Install dependencies
+COPY package*.json ./
+RUN npm ci
 
-# Copy the rest of the application source code
+# Copy source code
 COPY . .
 
-# Build the application
+# Build the app
 RUN npm run build
 
-# Stage 2: Run
-FROM node AS runner
+# Production Stage
+FROM nginx:alpine AS production
 
-WORKDIR /app
+# Copy built static files to nginx html directory
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy only the built files from the builder stage
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package.json ./
+# Copy custom nginx config if needed (optional)
+# COPY nginx.conf /etc/nginx/nginx.conf
 
-# Install only production dependencies
-RUN npm install --only=production
+EXPOSE 80
 
-# Expose the port specified in vite.config.js or your application
-EXPOSE 5300
-
-# Command to run the application
-CMD ["npm", "start"]
+CMD ["nginx", "-g", "daemon off;"]
