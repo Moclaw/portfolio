@@ -1,30 +1,31 @@
-# Stage 1: Build
-FROM node:20-alpine AS builder
+# Build Stage
+FROM node AS builder
 
-# Đặt thư mục làm việc
 WORKDIR /app
 
-# Sao chép file package.json và package-lock.json
+# Copy package files and install dependencies in cached layer
 COPY package*.json ./
-# Cài đặt dependencies
-RUN npm install -force
+RUN npm ci
 
-# Sao chép toàn bộ mã nguồn vào container
+# Copy the rest of the application and build
 COPY . .
 
-# Build ứng dụng
+# Build the app
 RUN npm run build
 
-# Stage 2: Serve
-FROM nginx:1.25.2-alpine
-# Xóa cache để giảm kích thước container
-RUN rm -rf /usr/share/nginx/html/*
+# Runner Stage
+FROM node AS runner
 
-# Sao chép build từ stage builder vào nginx container
-COPY --from=builder /app/build /usr/share/nginx/html
+WORKDIR /app
 
-# Expose cổng 80 (đây là cổng mặc định của nginx)
-EXPOSE 80
+# Copy only package files and install production dependencies
+COPY --from=builder /app/package*.json ./
 
-# Lệnh mặc định để khởi chạy nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Copy built files
+COPY --from=builder /app/dist ./dist
+
+# Expose application port
+EXPOSE 5300
+
+# Start the application
+CMD ["npm", "start"]
