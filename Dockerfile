@@ -24,7 +24,7 @@ RUN rm -rf /usr/share/nginx/html/*
 COPY --from=builder /app/build /usr/share/nginx/html
 
 # Expose cổng 80 (đây là cổng mặc định của nginx)
-EXPOSE 5300
+EXPOSE 80
 
 # Lệnh mặc định để khởi chạy nginx
 CMD ["nginx", "-g", "daemon off;"]
