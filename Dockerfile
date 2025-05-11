@@ -1,31 +1,25 @@
-FROM node AS builder
+# Stage 1: Build the application
+FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copy the package.json and install dependencies
+# Cài đặt dependencies
 COPY package.json .
 RUN npm install --force
-
-# Copy the rest of the application source code
 COPY . .
-
-# Build the application
 RUN npm run build
 
-# Stage 2: Run
-FROM node AS runner
+# Stage 2: Serve with Nginx
+FROM nginx:alpine AS runner
 
-WORKDIR /app
+# Copy built files vào thư mục public của nginx
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy only the built files from the builder stage
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package.json ./
+# Copy cấu hình Nginx tùy chỉnh (nếu có)
+# COPY nginx.conf /etc/nginx/nginx.conf
 
-# Install only production dependencies
-RUN npm install --only=production
+# Mặc định Nginx chạy trên cổng 80, bạn có thể map ra ngoài 5300 khi chạy container
+EXPOSE 80
 
-# Expose the port specified in vite.config.js or your application
-EXPOSE 5300
-
-# Command to run the application
-CMD ["npm", "run", "start"]
+# Khởi chạy Nginx
+CMD ["nginx", "-g", "daemon off;"]

@@ -38,4 +38,4 @@ jobs:
           docker pull ${{ secrets.DOCKER_USERNAME }}/portfolio:latest
           docker stop portfolio || true
           docker rm portfolio || true
-          docker run -d --restart always --name portfolio -p 5300:5300 ${{ secrets.DOCKER_USERNAME }}/portfolio:latest
+          docker run -d --restart always --name portfolio -p 5300:80 ${{ secrets.DOCKER_USERNAME }}/portfolio:latest
