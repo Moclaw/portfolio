@@ -28,3 +28,43 @@ bin/
 tmp/
 build-errors.log
 *.db
+*.sqlite
+*.sqlite3
+go.work
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Swagger generated docs
+docs/docs.go
+docs/swagger.json
+docs/swagger.yaml
+
+# LocalStack data
+localstack/
+.localstack/
+docker-data/
+volumes/
+
+# Air live reload
+.air.toml
+
+# Build artifacts
+build/
+dist/
+out/
+
+# Certificates and keys
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+
+# OS specific
+Thumbs.db
