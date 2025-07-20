@@ -18,6 +18,10 @@ import typescript from "./tech/typescript.png";
 import threejs from "./tech/threejs.svg";
 import csharp from "./tech/c-sharp.png";
 import net from "./tech/NETcore.png";
+import nodejs from "./tech/nodejs.png";
+import javascript from "./tech/javascript.png";
+import reactjs from "./tech/reactjs.png";
+import Azure from "./tech/Azure.png";
 import Ubuntu from "./tech/Ubuntu.png";
 import RabbitMQ from "./tech/RabbitMQ.png";
 import Redis from "./tech/Redis.png";
@@ -65,6 +69,10 @@ export {
 	tailwind,
 	typescript,
 	threejs,
+	nodejs,
+	javascript,
+	reactjs,
+	Azure,
 	carrent,
 	jobit,
 	tripguide,

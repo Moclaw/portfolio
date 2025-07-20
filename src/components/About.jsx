@@ -3,12 +3,14 @@ import Tilt from "react-parallax-tilt";
 import { motion } from "framer-motion";
 
 import { styles } from "../styles";
-import { services } from "../constants";
 import { SectionWrapper } from "../hoc";
 import { fadeIn, textVariant } from "../utils/motion";
+import { usePortfolioData } from "../constants/dynamic";
+import { usePortfolio } from "../context/PortfolioContext";
+import ApiLoadingState from "./ApiLoadingState";
 
 const ServiceCard = ({ index, title, icon }) => (
-  <Tilt options={{ max: 45, scale: 1, speed: 450 }}>
+  <Tilt options={{ max: 40, scale: 1, speed: 450 }}>
     <motion.div
       variants={fadeIn("right", "spring", index * 0.5, 0.75)}
       className="w-full green-pink-gradient p-[1px] rounded-[20px] shadow-card"
@@ -33,6 +35,21 @@ const ServiceCard = ({ index, title, icon }) => (
 );
 
 const About = () => {
+  const { services } = usePortfolioData();
+  const { loading } = usePortfolio();
+
+  if (loading) {
+    return (
+      <div className="mt-20">
+        <motion.div variants={textVariant()}>
+          <p className={styles.sectionSubText}>Introduction</p>
+          <h2 className={styles.sectionHeadText}>Overview.</h2>
+        </motion.div>
+        <ApiLoadingState message="Loading services..." />
+      </div>
+    );
+  }
+
   return (
     <>
       <motion.div variants={textVariant()}>

@@ -7,9 +7,12 @@
 		"dev": "vite --port 5300",
 		"build": "vite build ",
 		"preview": "vite preview --port 5300",
-		"start": "serve -s build -l 5300"
+		"start": "serve -s dist -l 5300"
 	},
 	"dependencies": {
+		"@dnd-kit/core": "^6.3.1",
+		"@dnd-kit/sortable": "^10.0.0",
+		"@dnd-kit/utilities": "^3.2.2",
 		"@emailjs/browser": "^3.12.1",
 		"@react-three/drei": "^9.107.0",
 		"@react-three/fiber": "^8.16.8",

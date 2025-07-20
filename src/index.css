@@ -19,6 +19,28 @@
 	display: block;
 }
 
+/* Line clamp utilities */
+.line-clamp-1 {
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 3;
+}
+
 .black-gradient {
 	background: #000000;
 	/* fallback for old browsers */
@@ -29,6 +51,19 @@
 	background: linear-gradient(to right,
 			#434343,
 			#000000);
+	/* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+.blue-dark-gradient {
+	background: #042A70;
+	/* fallback for old browsers */
+	background: -webkit-linear-gradient(to right,
+			#043DA8,
+			#042A70);
+	/* Chrome 10-25, Safari 5.1-6 */
+	background: linear-gradient(to right,
+			#043DA8,
+			#042A70);
 	/* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
 }
 

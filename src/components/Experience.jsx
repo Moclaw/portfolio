@@ -8,9 +8,11 @@ import { motion } from "framer-motion";
 import "react-vertical-timeline-component/style.min.css";
 
 import { styles } from "../styles";
-import { experiences } from "../constants";
 import { SectionWrapper } from "../hoc";
 import { textVariant } from "../utils/motion";
+import { usePortfolioData } from "../constants/dynamic";
+import { usePortfolio } from "../context/PortfolioContext";
+import ApiLoadingState from "./ApiLoadingState";
 
 const ExperienceCard = ({ experience }) => {
 	return (
@@ -57,6 +59,25 @@ const ExperienceCard = ({ experience }) => {
 };
 
 const Experience = () => {
+	const { experiences } = usePortfolioData();
+	const { loading } = usePortfolio();
+	
+	if (loading) {
+		return (
+			<div className="mt-20">
+				<motion.div variants={textVariant()}>
+					<p className={`${styles.sectionSubText} text-center`}>
+						What I have done so far
+					</p>
+					<h2 className={`${styles.sectionHeadText} text-center`}>
+						Work Experience.
+					</h2>
+				</motion.div>
+				<ApiLoadingState message="Loading work experience..." />
+			</div>
+		);
+	}
+
 	return (
 		<>
 			<motion.div variants={textVariant()}>
