@@ -12,6 +12,8 @@ import AdminPanel from "./AdminPanel";
 import AdminContacts from "./AdminContacts";
 import CountsDashboard from "./CountsDashboard";
 import DragDropList from "./DragDropList";
+import ImageUpload from "./common/ImageUpload";
+import ResourceManager from "./common/ResourceManager";
 
 export {
 	Navbar,
@@ -27,5 +29,7 @@ export {
 	AdminPanel,
 	AdminContacts,
 	CountsDashboard,
-	DragDropList
+	DragDropList,
+	ImageUpload,
+	ResourceManager
 }
