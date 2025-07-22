@@ -4,7 +4,9 @@ import { useAuth } from '../context/AuthContext';
 import { slideIn } from '../utils/motion';
 import CountsDashboard from './CountsDashboard';
 import DragDropList from './DragDropList';
+import UploadManager from './UploadManager';
 import api from '../services/api';
+import FileUpload from './common/FileUpload';
 
 const AdminPanel = ({ onClose, isPage = false }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -16,6 +18,18 @@ const AdminPanel = ({ onClose, isPage = false }) => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [isOrderMode, setIsOrderMode] = useState(false);
+  
+  // User management state
+  const [userForm, setUserForm] = useState({
+    username: '',
+    email: '',
+    password: '',
+    role: 'user'
+  });
+  const [editingUser, setEditingUser] = useState(null);
+  const [showUserCreateForm, setShowUserCreateForm] = useState(false);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
 
   const { token, API_BASE_URL, user } = useAuth();
 
@@ -58,6 +72,8 @@ const AdminPanel = ({ onClose, isPage = false }) => {
     { id: 'services', name: 'Services', endpoint: 'services' },
     { id: 'testimonials', name: 'Testimonials', endpoint: 'testimonials' },
     { id: 'contacts', name: 'Contacts', endpoint: 'contacts' },
+    { id: 'users', name: 'Users', endpoint: 'users' },
+    { id: 'uploads', name: 'File Manager', endpoint: null },
   ];
 
   const fetchData = async (endpoint) => {
@@ -66,7 +82,7 @@ const AdminPanel = ({ onClose, isPage = false }) => {
 
     try {
       let url;
-      if (endpoint === 'contacts') {
+      if (endpoint === 'contacts' || endpoint === 'users') {
         url = `${API_BASE_URL}/admin/${endpoint}`;
       } else {
         url = `${API_BASE_URL}/api/${endpoint}`;
@@ -83,6 +99,8 @@ const AdminPanel = ({ onClose, isPage = false }) => {
         const result = await response.json();
         if (endpoint === 'contacts') {
           setData(prev => ({ ...prev, [endpoint]: result.data || [] }));
+        } else if (endpoint === 'users') {
+          setData(prev => ({ ...prev, [endpoint]: result.users || [] }));
         } else if (endpoint === 'projects') {
           // Handle the new projects response structure
           setData(prev => ({ ...prev, [endpoint]: result.data || [] }));
@@ -942,7 +960,7 @@ const AdminPanel = ({ onClose, isPage = false }) => {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-tertiary rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden"
+          className="bg-tertiary rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
         >
           <div className="flex items-center justify-between p-6 border-b border-gray-600">
             <h3 className="text-white text-xl font-bold">
@@ -964,13 +982,44 @@ const AdminPanel = ({ onClose, isPage = false }) => {
 
           <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
             <form onSubmit={handleFormSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {fields.map(field => (
-                  <div key={field.name} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
+                  <div key={field.name} className={field.type === 'textarea' || field.type === 'file' ? 'md:col-span-2' : ''}>
                     <label className="block text-white text-sm font-medium mb-2">
                       {field.label}
                     </label>
-                    {field.type === 'textarea' ? (
+                    
+                    {field.type === 'file' ? (
+                      <FileUpload
+                        onUploadSuccess={(file, allFiles) => {
+                          if (field.multiple) {
+                            const urls = allFiles.map(f => f.url).filter(url => url);
+                            setFormData(prev => ({ 
+                              ...prev, 
+                              [field.name]: urls.join(',') 
+                            }));
+                          } else {
+                            if (file.url) {
+                              setFormData(prev => ({ 
+                                ...prev, 
+                                [field.name]: file.url 
+                              }));
+                            } else {
+                              setError('Upload successful but URL not received. Please try again.');
+                            }
+                          }
+                        }}
+                        onUploadError={(error) => setError(error.message)}
+                        multiple={field.multiple || false}
+                        accept={field.accept || "image/*"}
+                        maxSize={field.maxSize || 10 * 1024 * 1024}
+                        label={field.placeholder || `Choose ${field.label}`}
+                        description={field.description || "Drag and drop files here, click to upload new files, or select from existing files"}
+                        showPreview={true}
+                        existingFiles={field.existingFiles || []}
+                        className="bg-gray-700"
+                      />
+                    ) : field.type === 'textarea' ? (
                       <textarea
                         name={field.name}
                         value={formData[field.name] || ''}
@@ -1044,7 +1093,14 @@ const AdminPanel = ({ onClose, isPage = false }) => {
           { name: 'description', label: 'Description', type: 'textarea', placeholder: 'Enter project description', required: true },
           { name: 'source_code_link', label: 'Source Code Link', placeholder: 'https://github.com/...', type: 'url' },
           { name: 'live_demo_link', label: 'Live Demo Link', placeholder: 'https://...', type: 'url' },
-          { name: 'image', label: 'Image', placeholder: 'carrent.png' },
+          { 
+            name: 'image', 
+            label: 'Project Image', 
+            type: 'file',
+            accept: 'image/*',
+            placeholder: 'Upload project image',
+            description: 'Upload project screenshot or image'
+          },
           { name: 'order', label: 'Order', placeholder: '1', type: 'number' },
           { name: 'is_active', label: 'Status', type: 'select', options: [
             { value: 'true', label: 'Active' },
@@ -1055,7 +1111,14 @@ const AdminPanel = ({ onClose, isPage = false }) => {
         return [
           { name: 'title', label: 'Job Title', placeholder: 'Full Stack Developer', required: true },
           { name: 'company_name', label: 'Company Name', placeholder: 'MaicoGroup', required: true },
-          { name: 'icon', label: 'Company Icon', placeholder: 'maico.png' },
+          { 
+            name: 'icon', 
+            label: 'Company Logo', 
+            type: 'file',
+            accept: 'image/*',
+            placeholder: 'Upload company logo',
+            description: 'Upload company logo or icon'
+          },
           { name: 'icon_bg', label: 'Icon Background Color', placeholder: '#ffffff' },
           { name: 'date', label: 'Date Range', placeholder: 'Apr 2021 - Jan 2022', required: true },
           { name: 'order', label: 'Order', placeholder: '1', type: 'number' },
@@ -1067,7 +1130,14 @@ const AdminPanel = ({ onClose, isPage = false }) => {
       case 'technologies':
         return [
           { name: 'name', label: 'Technology Name', placeholder: 'C#', required: true },
-          { name: 'icon', label: 'Icon File', placeholder: 'c-sharp.png' },
+          { 
+            name: 'icon', 
+            label: 'Technology Icon', 
+            type: 'file',
+            accept: 'image/*',
+            placeholder: 'Upload technology icon',
+            description: 'Upload technology logo or icon'
+          },
           { name: 'category', label: 'Category', type: 'select', options: [
             { value: 'programming', label: 'Programming' },
             { value: 'framework', label: 'Framework' },
@@ -1091,7 +1161,14 @@ const AdminPanel = ({ onClose, isPage = false }) => {
       case 'services':
         return [
           { name: 'title', label: 'Service Title', placeholder: 'Full Stack Developer', required: true },
-          { name: 'icon', label: 'Icon File', placeholder: 'web.png' },
+          { 
+            name: 'icon', 
+            label: 'Service Icon', 
+            type: 'file',
+            accept: 'image/*',
+            placeholder: 'Upload service icon',
+            description: 'Upload service icon or illustration'
+          },
           { name: 'order', label: 'Order', placeholder: '1', type: 'number' },
           { name: 'is_active', label: 'Status', type: 'select', options: [
             { value: 'true', label: 'Active' },
@@ -1104,7 +1181,14 @@ const AdminPanel = ({ onClose, isPage = false }) => {
           { name: 'name', label: 'Client Name', placeholder: 'Sara Lee', required: true },
           { name: 'designation', label: 'Designation', placeholder: 'CFO', required: true },
           { name: 'company', label: 'Company', placeholder: 'Acme Co', required: true },
-          { name: 'image', label: 'Client Image URL', placeholder: 'https://randomuser.me/api/portraits/women/4.jpg', type: 'url' },
+          { 
+            name: 'image', 
+            label: 'Client Photo', 
+            type: 'file',
+            accept: 'image/*',
+            placeholder: 'Upload client photo',
+            description: 'Upload client profile photo'
+          },
           { name: 'order', label: 'Order', placeholder: '1', type: 'number' },
           { name: 'is_active', label: 'Status', type: 'select', options: [
             { value: 'true', label: 'Active' },
@@ -1128,6 +1212,7 @@ const AdminPanel = ({ onClose, isPage = false }) => {
     }
   };
 
+  // Order management functions
   const renderOrderManagement = () => {
     const currentTab = tabs.find(tab => tab.id === activeTab);
     if (!currentTab || !currentTab.endpoint) return null;
@@ -1344,10 +1429,353 @@ const AdminPanel = ({ onClose, isPage = false }) => {
     }
   };
 
+  // Users management rendering
+  const renderUsersManagement = () => {
+    const handleCreateUser = async (e) => {
+      e.preventDefault();
+      try {
+        await api.createUser(userForm);
+        setUserForm({ username: '', email: '', password: '', role: 'user' });
+        setShowUserCreateForm(false);
+        await fetchData('users');
+      } catch (error) {
+        console.error('Error creating user:', error);
+        alert('Failed to create user');
+      }
+    };
+
+    const handleUpdateUser = async (e) => {
+      e.preventDefault();
+      try {
+        const { password, ...updateData } = userForm;
+        await api.updateUser(editingUser.id, updateData);
+        setEditingUser(null);
+        setUserForm({ username: '', email: '', password: '', role: 'user' });
+        await fetchData('users');
+      } catch (error) {
+        console.error('Error updating user:', error);
+        alert('Failed to update user');
+      }
+    };
+
+    const handleUpdatePassword = async (e) => {
+      e.preventDefault();
+      if (!newPassword || newPassword.length < 6) {
+        alert('Password must be at least 6 characters');
+        return;
+      }
+      try {
+        await api.updateUserPassword(editingUser.id, newPassword);
+        setShowPasswordForm(false);
+        setNewPassword('');
+        alert('Password updated successfully');
+      } catch (error) {
+        console.error('Error updating password:', error);
+        alert('Failed to update password');
+      }
+    };
+
+    const handleDeleteUser = async (userId) => {
+      if (confirm('Are you sure you want to delete this user?')) {
+        try {
+          await api.deleteUser(userId);
+          await fetchData('users');
+        } catch (error) {
+          console.error('Error deleting user:', error);
+          alert('Failed to delete user');
+        }
+      }
+    };
+
+    const handleToggleStatus = async (userId) => {
+      try {
+        await api.toggleUserStatus(userId);
+        await fetchData('users');
+      } catch (error) {
+        console.error('Error toggling user status:', error);
+        alert('Failed to toggle user status');
+      }
+    };
+
+    const startEdit = (user) => {
+      setEditingUser(user);
+      setUserForm({
+        username: user.username,
+        email: user.email,
+        password: '',
+        role: user.role
+      });
+      setShowUserCreateForm(false);
+    };
+
+    const startPasswordEdit = (user) => {
+      setEditingUser(user);
+      setShowPasswordForm(true);
+      setNewPassword('');
+    };
+
+    const users = data.users || [];
+
+    return (
+      <div className="space-y-6">
+        {/* Create/Edit Form */}
+        {(showUserCreateForm || editingUser) && (
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h3 className="text-white text-lg font-medium mb-4">
+              {editingUser ? 'Edit User' : 'Create New User'}
+            </h3>
+            <form onSubmit={editingUser ? handleUpdateUser : handleCreateUser} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Username *
+                  </label>
+                  <input
+                    type="text"
+                    value={userForm.username}
+                    onChange={(e) => setUserForm(prev => ({ ...prev, username: e.target.value }))}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    value={userForm.email}
+                    onChange={(e) => setUserForm(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {!editingUser && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                      Password *
+                    </label>
+                    <input
+                      type="password"
+                      value={userForm.password}
+                      onChange={(e) => setUserForm(prev => ({ ...prev, password: e.target.value }))}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white"
+                      required
+                      minLength="6"
+                    />
+                  </div>
+                )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Role
+                  </label>
+                  <select
+                    value={userForm.role}
+                    onChange={(e) => setUserForm(prev => ({ ...prev, role: e.target.value }))}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white"
+                  >
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
+                >
+                  {editingUser ? 'Update User' : 'Create User'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowUserCreateForm(false);
+                    setEditingUser(null);
+                    setUserForm({ username: '', email: '', password: '', role: 'user' });
+                  }}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Password Update Form */}
+        {showPasswordForm && editingUser && (
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h3 className="text-white text-lg font-medium mb-4">
+              Update Password for {editingUser.username}
+            </h3>
+            <form onSubmit={handleUpdatePassword} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  New Password *
+                </label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white"
+                  required
+                  minLength="6"
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
+                >
+                  Update Password
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPasswordForm(false);
+                    setEditingUser(null);
+                    setNewPassword('');
+                  }}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Users List */}
+        <div className="bg-gray-800 rounded-lg overflow-hidden">
+          <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+            <h3 className="text-white text-lg font-medium">Users</h3>
+            <button
+              onClick={() => {
+                setShowUserCreateForm(true);
+                setEditingUser(null);
+                setUserForm({ username: '', email: '', password: '', role: 'user' });
+              }}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add User
+            </button>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-700">
+                <tr>
+                  {getTableHeaders('users').map(header => (
+                    <th key={header} className="px-4 py-3 text-left text-sm font-medium text-gray-300">
+                      {header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-700">
+                {users.map(user => (
+                  <tr key={user.id} className="hover:bg-gray-700">
+                    <td className="px-4 py-3 text-sm text-white">{user.id}</td>
+                    <td className="px-4 py-3 text-sm text-white">{user.username}</td>
+                    <td className="px-4 py-3 text-sm text-white">{user.email}</td>
+                    <td className="px-4 py-3 text-sm">
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        user.role === 'admin' 
+                          ? 'bg-purple-600 text-white' 
+                          : 'bg-gray-600 text-white'
+                      }`}>
+                        {user.role}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        user.is_active 
+                          ? 'bg-green-600 text-white' 
+                          : 'bg-red-600 text-white'
+                      }`}>
+                        {user.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-400">
+                      {new Date(user.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => startEdit(user)}
+                          className="text-blue-400 hover:text-blue-300"
+                          title="Edit user"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => startPasswordEdit(user)}
+                          className="text-yellow-400 hover:text-yellow-300"
+                          title="Change password"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => handleToggleStatus(user.id)}
+                          className={user.is_active ? 'text-orange-400 hover:text-orange-300' : 'text-green-400 hover:text-green-300'}
+                          title={user.is_active ? 'Deactivate user' : 'Activate user'}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(user.id)}
+                          className="text-red-400 hover:text-red-300"
+                          title="Delete user"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {users.length === 0 && (
+            <div className="p-8 text-center text-gray-400">
+              No users found. Click "Add User" to create the first user.
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const renderTable = () => {
     // Special case for dashboard tab
     if (activeTab === 'dashboard') {
       return <CountsDashboard onNavigateToTab={handleNavigateToTab} />;
+    }
+
+    // Special case for uploads tab
+    if (activeTab === 'uploads') {
+      return <UploadManager />;
+    }
+
+    // Special case for users tab
+    if (activeTab === 'users') {
+      return renderUsersManagement();
     }
     
     // Show drag-and-drop interface in order mode
@@ -1372,6 +1800,8 @@ const AdminPanel = ({ onClose, isPage = false }) => {
         return ['Image', 'Name', 'Designation', 'Company', 'Order', 'Status'];
       case 'contacts':
         return ['Name', 'Email', 'Subject', 'Status', 'Date'];
+      case 'users':
+        return ['ID', 'Username', 'Email', 'Role', 'Status', 'Created', 'Actions'];
       default:
         return [];
     }
@@ -1387,7 +1817,7 @@ const AdminPanel = ({ onClose, isPage = false }) => {
               alt={item.name} 
               className="w-12 h-8 object-cover rounded"
               onError={(e) => {
-                e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCA0OCAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjMyIiBmaWxsPSIjMzc0MTUxIi8+CjxwYXRoIGQ9Im0yMCAxNiA0IDQgOC04IiBzdHJva2U9IiM2QjcyODAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=';
+                e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCA0OCAzMiIgZmlsbD0ibm9uZSIgeG1zbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjMyIiBmaWxsPSIjMzc0MTUxIi8+CjxwYXRoIGQ9Im0yMCAxNiA0IDQgOC04IiBzdHJva2U9IiM2QjcyODAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=';
                 e.target.className = 'w-12 h-8 object-cover rounded opacity-50';
               }}
             />
@@ -1437,7 +1867,7 @@ const AdminPanel = ({ onClose, isPage = false }) => {
               alt={item.name} 
               className="w-10 h-10 object-contain rounded bg-white p-1"
               onError={(e) => {
-                e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjMzc0MTUxIi8+CjxwYXRoIGQ9Ik0yMCAxMGwtNCA0IDQgNCA0LTR6IiBzdHJva2U9IiM2QjcyODAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjwvcWc+Cjwvc3ZnPgo=';
+                e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1zbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjMzc0MTUxIi8+CjxwYXRoIGQ9Ik0yMCAxMGwtNCA0IDQgNCA0LTR6IiBzdHJva2U9IiM2QjcyODAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjwvcWc+Cjwvc3ZnPgo=';
                 e.target.className = 'w-10 h-10 object-contain rounded opacity-50';
               }}
             />
@@ -1459,7 +1889,7 @@ const AdminPanel = ({ onClose, isPage = false }) => {
               alt={item.title} 
               className="w-10 h-10 object-contain rounded bg-gradient-to-r from-violet-600 to-purple-600 p-2"
               onError={(e) => {
-                e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjMzc0MTUxIi8+CjxwYXRoIGQ9Ik0xMCAxNWg0djEwaC00eiIgZmlsbD0iIzZCNzI4MCIvPgo8L3N2Zz4K';
+                e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1zbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjMzc0MTUxIi8+CjxwYXRoIGQ9Ik0xMCAxNWg0djEwaC00eiIgZmlsbD0iIzZCNzI4MCIvPgo8L3N2Zz4K';
                 e.target.className = 'w-10 h-10 object-contain rounded opacity-50';
               }}
             />
@@ -1480,7 +1910,7 @@ const AdminPanel = ({ onClose, isPage = false }) => {
               alt={item.name} 
               className="w-10 h-10 object-cover rounded-full"
               onError={(e) => {
-                e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiMzNzQxNTEiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNSIgcj0iNSIgZmlsbD0iIzZCNzI4MCIvPgo8cGF0aCBkPSJNMTAgMzBjMC02IDUtMTAgMTAtMTBzMTAgNCAEMCA2IiBmaWxsPSIjNkI3MjgwIi8+Cjwvc3ZnPgo=';
+                e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1zbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiMzNzQxNTEiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNSIgcj0iNSIgZmlsbD0iIzZCNzI4MCIvPgo8cGF0aCBkPSJNMTAgMzBjMC02IDUtMTAgMTAtMTBzMTAgNCAEMCA2IiBmaWxsPSIjNkI3MjgwIi8+Cjwvc3ZnPgo=';
               }}
             />
           ) : (
@@ -1577,13 +2007,13 @@ const AdminPanel = ({ onClose, isPage = false }) => {
                   {tabs.find(tab => tab.id === activeTab)?.name}
                 </h3>
                 <p className="text-secondary text-sm mt-1">
-                  {activeTab === 'dashboard' 
+                  {activeTab === 'dashboard'
                     ? 'Overview of your portfolio content'
                     : `Manage your ${activeTab} content`
                   }
                 </p>
               </div>
-              {activeTab !== 'contacts' && activeTab !== 'dashboard' && (
+              {activeTab !== 'contacts' && activeTab !== 'dashboard' && activeTab !== 'uploads' && activeTab !== 'users' && (
                 <div className="flex gap-3">
                   <button
                     onClick={() => setIsOrderMode(!isOrderMode)}
@@ -1626,11 +2056,11 @@ const AdminPanel = ({ onClose, isPage = false }) => {
             </div>
           </div>
         </div>
-      </motion.div>
 
-      {/* Render Forms and Modals */}
-      {(editingItem || showCreateForm) && renderForm()}
-      {selectedItem && renderItemDetail()}
+        {/* Render Forms and Modals */}
+        {renderItemDetail()}
+        {(editingItem || showCreateForm) && renderForm()}
+      </motion.div>
     </div>
   );
 };

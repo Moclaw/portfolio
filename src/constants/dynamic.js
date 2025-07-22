@@ -1,32 +1,4 @@
 import { usePortfolio } from '../context/PortfolioContext';
-import {
-	mobile,
-	backend,
-	web,
-	carrent,
-	jobit,
-	tripguide,
-	maico,
-	freelance,
-	terralogic,
-	levinci,
-	csharp,
-	net,
-	Ubuntu,
-	RabbitMQ,
-	Redis,
-	GoogleCloud,
-	Jenkins,
-	Jira,
-	Kubernetes,
-	React,
-	GithubActions,
-	docker,
-	Aws,
-	Kafka,
-	mongodb
-
-} from "../assets";
 
 // Navigation links (static)
 export const navLinks = [
@@ -52,55 +24,20 @@ export const navLinks = [
 export const usePortfolioData = () => {
 	const { portfolioData } = usePortfolio();
 	
-	// Map API data to frontend format with fallback icons
-	const iconMap = {
-		'web.png': web,
-		'backend.png': backend,
-		'mobile.png': mobile,
-		'c-sharp.png': csharp,
-		'NETcore.png': net,
-		'Ubuntu.png': Ubuntu,
-		'RabbitMQ.png': RabbitMQ,
-		'Redis.png': Redis,
-		'GoogleCloud.png': GoogleCloud,
-		'Jenkins.png': Jenkins,
-		'Jira.png': Jira,
-		'Kubernetes.png': Kubernetes,
-		'React.png': React,
-		'gitaction.png': GithubActions,
-		'docker.png': docker,
-		'AWS.png': Aws,
-		'ApacheKafka.png': Kafka,
-		'mongodb.png': mongodb,
-		'maico.png': maico,
-		'freelance.jpg': freelance,
-		'levinci.svg': levinci,
-		'terralogic.jfif': terralogic,
-		'carrent.png': carrent,
-		'jobit.png': jobit,
-		'tripguide.png': tripguide,
-	};
-
-	const mapIconPath = (iconPath) => {
-		if (!iconPath) return web; // default fallback
-		const iconName = iconPath.split('/').pop(); // get filename
-		return iconMap[iconName] || web;
-	};
-
 	const services = portfolioData?.services?.map(service => ({
 		title: service.title,
-		icon: mapIconPath(service.icon)
+		icon: service.icon || '/default-web.png' // Use URL directly with fallback
 	})) || [];
 
 	const technologies = portfolioData?.technologies?.map(tech => ({
 		name: tech.name,
-		icon: mapIconPath(tech.icon)
+		icon: tech.icon || '/default-tech.png' // Use URL directly with fallback
 	})) || [];
 
 	const experiences = portfolioData?.experiences?.map(exp => ({
 		title: exp.title,
 		company_name: exp.company_name || exp.companyName,
-		icon: mapIconPath(exp.icon),
+		icon: exp.icon || '/default-company.png', // Use URL directly with fallback
 		iconBg: exp.icon_bg || exp.iconBg || "#ffffff",
 		date: exp.date,
 		points: exp.points || []
@@ -126,7 +63,7 @@ export const usePortfolioData = () => {
 		name: project.name,
 		description: project.description,
 		tags: project.tags || [],
-		image: mapIconPath(project.image),
+		image: project.image || '/default-project.png', // Use URL directly with fallback
 		source_code_link: project.source_code_link || project.sourceCodeLink || "#",
 		live_demo_link: project.live_demo_link || project.liveDemoLink
 	})) || [];

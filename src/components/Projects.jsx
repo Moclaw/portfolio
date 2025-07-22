@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import Tilt from "react-parallax-tilt";
 import { motion } from "framer-motion";
 
 import { styles } from "../styles";
 import { github } from "../assets";
 import { SectionWrapper } from "../hoc";
+import { getFullImageUrl } from "../utils/urlHelper";
 import { usePortfolioData } from "../constants/dynamic";
 import { fadeIn, textVariant } from "../utils/motion";
 
@@ -16,6 +17,11 @@ const ProjectCard = ({
   image,
   source_code_link,
 }) => {
+  const [showFullDesc, setShowFullDesc] = useState(false);
+
+  const isLongDesc = description.length > 120;
+  const shortDesc = isLongDesc ? description.slice(0, 120) + "..." : description;
+
   return (
     <motion.div variants={fadeIn("up", "spring", index * 0.5, 0.75)}>
       <Tilt
@@ -24,13 +30,16 @@ const ProjectCard = ({
           scale: 1,
           speed: 450,
         }}
-        className='bg-tertiary p-5 rounded-2xl sm:w-[360px] w-full'
+        className='bg-tertiary p-5 rounded-2xl sm:w-[360px] w-full min-h-[480px] flex flex-col justify-between'
       >
         <div className='relative w-full h-[230px]'>
           <img
-            src={image}
+            src={getFullImageUrl(image)}
             alt='project_image'
             className='w-full h-full object-cover rounded-2xl'
+            onError={(e) => {
+              e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYwIiBoZWlnaHQ9IjIzMCIgdmlld0JveD0iMCAwIDM2MCAyMzAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzNjAiIGhlaWdodD0iMjMwIiBmaWxsPSIjMzc0MTUxIi8+CjxyZWN0IHg9IjE1MCIgeT0iOTAiIHdpZHRoPSI2MCIgaGVpZ2h0PSI1MCIgZmlsbD0iIzZCNzI4MCIvPgo8dGV4dCB4PSIxODAiIHk9IjEyNSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOUI5Qjk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5Qcm9qZWN0PC90ZXh0Pgo8L3N2Zz4K';
+            }}
           />
 
           <div className='absolute inset-0 flex justify-end m-3 card-img_hover'>
@@ -47,9 +56,19 @@ const ProjectCard = ({
           </div>
         </div>
 
-        <div className='mt-5'>
+        <div className='flex flex-col flex-1 mt-5'>
           <h3 className='text-white font-bold text-[24px]'>{name}</h3>
-          <p className='mt-2 text-secondary text-[14px]'>{description}</p>
+          <p className='mt-2 text-secondary text-[14px] min-h-[60px]'>
+            {showFullDesc ? description : shortDesc}
+            {isLongDesc && (
+              <span
+                className='ml-2 text-blue-400 cursor-pointer underline'
+                onClick={() => setShowFullDesc((v) => !v)}
+              >
+                {showFullDesc ? "Show less" : "Read more"}
+              </span>
+            )}
+          </p>
         </div>
 
         <div className='mt-4 flex flex-wrap gap-2'>

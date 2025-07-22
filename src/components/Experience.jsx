@@ -10,6 +10,7 @@ import "react-vertical-timeline-component/style.min.css";
 import { styles } from "../styles";
 import { SectionWrapper } from "../hoc";
 import { textVariant } from "../utils/motion";
+import { getFullImageUrl } from "../utils/urlHelper";
 import { usePortfolioData } from "../constants/dynamic";
 import { usePortfolio } from "../context/PortfolioContext";
 import ApiLoadingState from "./ApiLoadingState";
@@ -27,7 +28,7 @@ const ExperienceCard = ({ experience }) => {
 			icon={
 				<div className='flex justify-center items-center w-full h-full'>
 					<img
-						src={experience.icon}
+						src={getFullImageUrl(experience.icon)}
 						alt={experience.company_name}
 						className='w-[60%] h-[60%] object-contain'
 					/>

@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { styles } from "../styles";
 import { SectionWrapper } from "../hoc";
 import { fadeIn, textVariant } from "../utils/motion";
+import { getFullImageUrl } from "../utils/urlHelper";
 import { usePortfolioData } from "../constants/dynamic";
 import { usePortfolio } from "../context/PortfolioContext";
 import ApiLoadingState from "./ApiLoadingState";
@@ -17,7 +18,7 @@ const ServiceCard = ({ index, title, icon }) => (
     >
       <div className="bg-tertiary rounded-[20px] py-5 px-12 min-h-[280px] flex justify-evenly items-center flex-col" style={{ width: '300px', height: '350px' }}>
         <motion.img
-          src={icon}
+          src={getFullImageUrl(icon)}
           alt="web-development"
           className="w-16 h-16 object-contain"
           variants={fadeIn("", "", 0.1, 1)}
