@@ -3,7 +3,7 @@
  */
 
 // Default base URL for uploaded files (can be moved to config later)
-const DEFAULT_BASE_URL = 'http://localhost:4566/portfolio-bucket/uploads/';
+const DEFAULT_BASE_URL = 'https://media.moclawr.com/portfolio-bucket/uploads/';
 
 /**
  * Converts a filename or partial path to a full URL
