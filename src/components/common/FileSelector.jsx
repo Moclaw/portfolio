@@ -28,7 +28,6 @@ const FileSelector = ({
     setIsLoading(true);
     try {
       const response = await api.getUploadsWithSummary(pagination.page, pagination.limit);
-      console.log('FileSelector API response:', response); // Debug log
       
       if (response && response.data && response.data.data) {
         // Handle nested data structure: response.data.data
@@ -46,7 +45,6 @@ const FileSelector = ({
         }));
       }
     } catch (error) {
-      console.error('Error fetching uploads:', error);
     } finally {
       setIsLoading(false);
     }

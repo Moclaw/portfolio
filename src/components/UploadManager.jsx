@@ -50,7 +50,6 @@ const UploadManager = () => {
         });
       }
     } catch (error) {
-      console.error('Error fetching stats:', error);
       // Keep existing stats on error
     }
   };
@@ -190,7 +189,7 @@ const UploadManager = () => {
               transition={{ duration: 0.3 }}
             >
               <FileManager
-                onFileSelect={(files) => console.log('Selected files:', files)}
+                onFileSelect={(files) => {}}
                 onFileDeleted={handleFileDeleted}
                 multiple={true}
                 showUpload={false}
@@ -211,7 +210,6 @@ const UploadManager = () => {
                   <FileUpload
                     onUploadSuccess={handleUploadSuccess}
                     onUploadError={(error) => {
-                      console.error('Upload error:', error);
                       alert('Upload failed: ' + error.message);
                     }}
                     multiple={true}

@@ -85,8 +85,7 @@ export const useTechnologies = (initialPage = 1, initialLimit = 10) => {
         setTotalItems(fallbackTech.length);
       }
     } catch (err) {
-      console.error('Error fetching technologies:', err);
-      setError(err.message);
+      setError('Failed to fetch technologies');
     } finally {
       setLoading(false);
     }

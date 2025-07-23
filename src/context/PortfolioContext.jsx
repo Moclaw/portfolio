@@ -74,7 +74,6 @@ export const PortfolioProvider = ({ children }) => {
   useEffect(() => {
     // Prevent duplicate API calls in StrictMode
     if (hasFetched.current) {
-      console.log('🚫 Preventing duplicate API call');
       return;
     }
 
@@ -84,21 +83,30 @@ export const PortfolioProvider = ({ children }) => {
         setError(null);
         hasFetched.current = true;
         
-        console.log('🔄 Fetching portfolio data from API...');
-        
-        const data = await portfolioAPI.getPortfolioData();
+        // Fetch all data from individual API endpoints
+        const [services, technologies, experiences, projects, testimonials] = await Promise.all([
+          portfolioAPI.getServices(),
+          portfolioAPI.getAllTechnologies(),
+          portfolioAPI.getExperiences(),
+          portfolioAPI.getProjects(),
+          portfolioAPI.getTestimonials()
+        ]);
+
+        const data = {
+          services: services || fallbackData.services,
+          technologies: technologies || fallbackData.technologies,
+          experiences: experiences || fallbackData.experiences,
+          projects: projects || fallbackData.projects,
+          testimonials: testimonials || fallbackData.testimonials
+        };
         
         if (data && typeof data === 'object') {
-          console.log('✅ API data received:', data);
-          console.log('🔍 Testimonials data:', data.testimonials);
           setPortfolioData(data);
         } else {
-          console.log('⚠️  Using fallback data');
           setPortfolioData(fallbackData);
         }
         
       } catch (err) {
-        console.error('❌ API Error:', err);
         setError(err.message);
         setPortfolioData(fallbackData);
       } finally {
@@ -116,7 +124,22 @@ export const PortfolioProvider = ({ children }) => {
     refreshData: async () => {
       setLoading(true);
       try {
-        const data = await portfolioAPI.getPortfolioData();
+        const [services, technologies, experiences, projects, testimonials] = await Promise.all([
+          portfolioAPI.getServices(),
+          portfolioAPI.getAllTechnologies(),
+          portfolioAPI.getExperiences(),
+          portfolioAPI.getProjects(),
+          portfolioAPI.getTestimonials()
+        ]);
+
+        const data = {
+          services: services || fallbackData.services,
+          technologies: technologies || fallbackData.technologies,
+          experiences: experiences || fallbackData.experiences,
+          projects: projects || fallbackData.projects,
+          testimonials: testimonials || fallbackData.testimonials
+        };
+
         setPortfolioData(data || fallbackData);
         setError(null);
       } catch (err) {

@@ -39,7 +39,6 @@ const FileManager = ({
         }
       }
     } catch (error) {
-      console.error('Error fetching files:', error);
       setFiles([]);
     } finally {
       setLoading(false);
@@ -70,7 +69,6 @@ const FileManager = ({
       // Refresh the files to get updated pagination
       await fetchFiles(currentPage, searchTerm);
     } catch (error) {
-      console.error('Error deleting file:', error);
       alert('Failed to delete file. Please try again.');
     } finally {
       setDeletingFileId(null);
@@ -99,7 +97,7 @@ const FileManager = ({
           await api.deleteUpload(file.id);
           deletedFileIds.push(file.id);
         } catch (error) {
-          console.error(`Error deleting file ${file.original_name}:`, error);
+          // Continue with next file on error
         }
       }
 
@@ -123,7 +121,6 @@ const FileManager = ({
       // Refresh the files to get updated pagination
       await fetchFiles(currentPage, searchTerm);
     } catch (error) {
-      console.error('Error during bulk deletion:', error);
       alert('An error occurred during bulk deletion. Please try again.');
     } finally {
       setBulkDeleting(false);
@@ -463,7 +460,7 @@ const FileManager = ({
 
               <FileUpload
                 onUploadSuccess={handleUploadSuccess}
-                onUploadError={(error) => console.error('Upload error:', error)}
+                onUploadError={(error) => setError('Upload failed. Please try again.')}
                 multiple={true}
                 category={category}
               />

@@ -54,7 +54,6 @@ const AdminContacts = () => {
         setError('Failed to fetch contacts');
       }
     } catch (error) {
-      console.error('Fetch contacts error:', error);
       setError('Network error occurred');
     }
 
@@ -75,7 +74,7 @@ const AdminContacts = () => {
         setUnreadCount(result.data?.unread_count || 0);
       }
     } catch (error) {
-      console.error('Fetch unread count error:', error);
+      // Silently fail to get unread count
     }
   };
 
@@ -100,7 +99,6 @@ const AdminContacts = () => {
         setError(errorData.error || 'Failed to delete contact');
       }
     } catch (error) {
-      console.error('Delete error:', error);
       setError('Network error occurred');
     }
   };
@@ -126,7 +124,6 @@ const AdminContacts = () => {
         setError(errorData.error || 'Failed to update contact');
       }
     } catch (error) {
-      console.error('Update error:', error);
       setError('Network error occurred');
     }
   };
@@ -150,7 +147,7 @@ const AdminContacts = () => {
         }
       }
     } catch (error) {
-      console.error('Mark as read error:', error);
+      // Silently fail to mark as read
     }
   };
 

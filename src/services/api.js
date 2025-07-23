@@ -52,7 +52,6 @@ class PortfolioAPI {
     };
 
     try {
-      console.log(`🔗 Making API request to: ${url}`);
       const response = await fetch(url, config);
       
       if (!response.ok) {
@@ -60,7 +59,6 @@ class PortfolioAPI {
       }
       
       const data = await response.json();
-      console.log(`📦 API Response for ${endpoint}:`, data);
       
       // Handle the new backend response structure
       if (data.success) {
@@ -85,8 +83,6 @@ class PortfolioAPI {
       // Return the data directly if it doesn't have wrapper
       return data;
     } catch (error) {
-      console.error(`❌ API request failed for ${endpoint}:`, error);
-      
       // Return null instead of throwing, let components handle fallbacks
       return null;
     }

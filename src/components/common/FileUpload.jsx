@@ -87,7 +87,6 @@ const FileUpload = ({
         return newFile;
       }
     } catch (error) {
-      console.error('Upload error:', error);
       setUploadProgress(prev => {
         const newProgress = { ...prev };
         delete newProgress[file.name];
@@ -136,7 +135,7 @@ const FileUpload = ({
         await uploadFile(fileArray[0]);
       }
     } catch (error) {
-      console.error('File handling error:', error);
+      // Handle file processing error silently
     } finally {
       setUploading(false);
     }
@@ -186,7 +185,6 @@ const FileUpload = ({
         onUploadSuccess(null, remaining);
       }
     } catch (error) {
-      console.error('Remove file error:', error);
       if (onUploadError) {
         onUploadError(error);
       }

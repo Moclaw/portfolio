@@ -44,7 +44,7 @@ const Ball = ({ imgUrl }) => {
     img.crossOrigin = 'anonymous';
     img.onload = () => setImageExists(true);
     img.onerror = () => {
-      console.warn('Image not accessible:', fullUrl);
+      // Image not accessible, using fallback
       setImageExists(false);
     };
     img.src = fullUrl;

@@ -82,7 +82,6 @@ const CountsDashboard = ({ onNavigateToTab }) => {
         setError('Failed to fetch counts');
       }
     } catch (err) {
-      console.error('Error fetching counts:', err);
       setError('Failed to fetch counts');
     } finally {
       setIsLoading(false);

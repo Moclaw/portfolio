@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }) => {
           setToken(null);
         }
       } catch (error) {
-        console.error('Auth check failed:', error);
+        // Auth check failed, user is not authenticated
         localStorage.removeItem('token');
         setToken(null);
       }
@@ -71,7 +71,6 @@ export const AuthProvider = ({ children }) => {
         return { success: false, error: data.error || 'Login failed' };
       }
     } catch (error) {
-      console.error('Login error:', error);
       return { success: false, error: 'Network error occurred' };
     }
   };
@@ -94,7 +93,6 @@ export const AuthProvider = ({ children }) => {
         return { success: false, error: data.error || 'Registration failed' };
       }
     } catch (error) {
-      console.error('Registration error:', error);
       return { success: false, error: 'Network error occurred' };
     }
   };

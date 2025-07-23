@@ -42,7 +42,7 @@ const FeedbackCard = ({
             alt={`feedback_by-${name}`}
             className='w-10 h-10 rounded-full object-cover'
             onError={(e) => {
-              console.warn(`Failed to load image for ${name}:`, image);
+              // Failed to load image, will show fallback
               e.target.style.display = 'none';
             }}
           />

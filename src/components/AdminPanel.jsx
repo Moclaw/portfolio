@@ -123,7 +123,6 @@ const AdminPanel = ({ onClose, isPage = false }) => {
         setError('Failed to fetch data');
       }
     } catch (error) {
-      console.error('Fetch error:', error);
       setError('Network error occurred');
     }
 
@@ -150,7 +149,6 @@ const AdminPanel = ({ onClose, isPage = false }) => {
         setError(errorData.error || 'Failed to create item');
       }
     } catch (error) {
-      console.error('Create error:', error);
       setError('Network error occurred');
     }
   };
@@ -175,7 +173,6 @@ const AdminPanel = ({ onClose, isPage = false }) => {
         setError(errorData.error || 'Failed to update item');
       }
     } catch (error) {
-      console.error('Update error:', error);
       setError('Network error occurred');
     }
   };
@@ -199,7 +196,6 @@ const AdminPanel = ({ onClose, isPage = false }) => {
         setError(errorData.error || 'Failed to delete item');
       }
     } catch (error) {
-      console.error('Delete error:', error);
       setError('Network error occurred');
     }
   };
@@ -233,7 +229,6 @@ const AdminPanel = ({ onClose, isPage = false }) => {
         await fetchData(currentTab.endpoint);
       }
     } catch (error) {
-      console.error('Reorder error:', error);
       setError('Failed to update order');
       throw error;
     }
@@ -1439,7 +1434,6 @@ const AdminPanel = ({ onClose, isPage = false }) => {
         setShowUserCreateForm(false);
         await fetchData('users');
       } catch (error) {
-        console.error('Error creating user:', error);
         alert('Failed to create user');
       }
     };
@@ -1453,7 +1447,6 @@ const AdminPanel = ({ onClose, isPage = false }) => {
         setUserForm({ username: '', email: '', password: '', role: 'user' });
         await fetchData('users');
       } catch (error) {
-        console.error('Error updating user:', error);
         alert('Failed to update user');
       }
     };
@@ -1470,7 +1463,6 @@ const AdminPanel = ({ onClose, isPage = false }) => {
         setNewPassword('');
         alert('Password updated successfully');
       } catch (error) {
-        console.error('Error updating password:', error);
         alert('Failed to update password');
       }
     };
@@ -1481,7 +1473,6 @@ const AdminPanel = ({ onClose, isPage = false }) => {
           await api.deleteUser(userId);
           await fetchData('users');
         } catch (error) {
-          console.error('Error deleting user:', error);
           alert('Failed to delete user');
         }
       }
@@ -1492,7 +1483,6 @@ const AdminPanel = ({ onClose, isPage = false }) => {
         await api.toggleUserStatus(userId);
         await fetchData('users');
       } catch (error) {
-        console.error('Error toggling user status:', error);
         alert('Failed to toggle user status');
       }
     };

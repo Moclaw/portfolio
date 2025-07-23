@@ -1,5 +1,5 @@
 import { styles } from "../styles";
-import RoomCanvas from "./canvas/Room"; // Adjust the import if necessary
+import { RoomCanvas } from "./canvas";
 
 const Model3D = () => {
 	return (

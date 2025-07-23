@@ -1,7 +1,3 @@
-import {
-	// Chỉ import những assets cần thiết cho navLinks
-} from "../assets";
-
 export const navLinks = [
 	{
 		id: "about",

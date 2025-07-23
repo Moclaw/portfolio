@@ -164,7 +164,6 @@ const DragDropList = ({ items, onReorder, renderItem, keyExtractor, isActiveExtr
       setHasChanges(false);
       setOriginalItems([...localItems]);
     } catch (error) {
-      console.error('Failed to reorder items:', error);
       // Revert on error
       setLocalItems([...originalItems]);
       setHasChanges(false);
