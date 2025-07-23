@@ -3,6 +3,12 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
+# Define build argument
+ARG VITE_API_URL=https://api.moclawr.com
+
+# Set environment variable
+ENV VITE_API_URL=${VITE_API_URL}
+
 # Cài đặt dependencies
 COPY package.json .
 RUN npm install --force

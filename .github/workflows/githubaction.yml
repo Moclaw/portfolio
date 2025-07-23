@@ -32,10 +32,14 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/portfolio:latest
+          build-args: |
+            VITE_API_URL=https://api.moclawr.com
 
       - name: Deploy locally
         run: |
           docker pull ${{ secrets.DOCKER_USERNAME }}/portfolio:latest
           docker stop portfolio || true
           docker rm portfolio || true
-          docker run -d --restart always --name portfolio -p 5300:80 ${{ secrets.DOCKER_USERNAME }}/portfolio:latest
+          docker run -d --restart always --name portfolio -p 5300:80 \
+            -e VITE_API_URL=https://api.moclawr.com \
+            ${{ secrets.DOCKER_USERNAME }}/portfolio:latest
