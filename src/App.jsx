@@ -1,18 +1,17 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { Navbar, Model3D, AdminContacts } from './components';
-import Contact from './components/Contact';
-import AdminRoute from './components/AdminRoute';
-import { PortfolioProvider } from './context/PortfolioContext';
-import { AuthProvider } from './context/AuthContext';
-import ErrorBoundary from './components/ErrorBoundary';
-import ApiLoadingState from './components/ApiLoadingState';
+import { Navbar, ErrorBoundary, ApiLoadingState } from './shared';
+import { Model3D } from './features/home';
+import { Contact } from './features/contact';
+import { AdminRoute, AdminContacts } from './features/admin';
+import { PortfolioProvider } from './shared/context/PortfolioContext';
+import { AuthProvider } from './shared/context/AuthContext';
 
-const Experience = lazy(() => import('./components/Experience'));
-const About = lazy(() => import('./components/About'));
-const Tech = lazy(() => import('./components/Tech'));
-const Projects = lazy(() => import('./components/Projects'));
-const Testimonials = lazy(() => import('./components/Testimonials'));
+const Experience = lazy(() => import('./features/experience').then(module => ({ default: module.Experience })));
+const About = lazy(() => import('./features/about').then(module => ({ default: module.About })));
+const Tech = lazy(() => import('./features/tech').then(module => ({ default: module.Tech })));
+const Projects = lazy(() => import('./features/projects').then(module => ({ default: module.Projects })));
+const Testimonials = lazy(() => import('./features/testimonials').then(module => ({ default: module.Testimonials })));
 
 const App = () => {
 	return (
