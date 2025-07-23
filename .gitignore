@@ -1,0 +1,70 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Go specific
+bin/
+tmp/
+build-errors.log
+*.db
+*.sqlite
+*.sqlite3
+go.work
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Swagger generated docs
+docs/docs.go
+docs/swagger.json
+docs/swagger.yaml
+
+# LocalStack data
+localstack/
+.localstack/
+docker-data/
+volumes/
+
+# Air live reload
+.air.toml
+
+# Build artifacts
+build/
+dist/
+out/
+
+# Certificates and keys
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+
+# OS specific
+Thumbs.db
