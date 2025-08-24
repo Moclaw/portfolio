@@ -25,7 +25,26 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push Docker image
+      - name: Build Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          load: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/portfolio:latest
+          build-args: |
+            VITE_API_URL=https://api.moclawr.com
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test Docker image
+        run: |
+          docker run --rm -d --name portfolio-test -p 8080:80 ${{ secrets.DOCKER_USERNAME }}/portfolio:latest
+          sleep 10
+          curl -f http://localhost:8080 || exit 1
+          docker stop portfolio-test
+
+      - name: Push Docker image
         uses: docker/build-push-action@v4
         with:
           context: .
