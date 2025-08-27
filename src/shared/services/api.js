@@ -24,7 +24,9 @@ const endpoints = {
     testimonials: { order: '/admin/testimonials/order' },
     uploads: '/admin/uploads',
     resources: '/admin/resources',
-    users: '/admin/users'
+    users: '/admin/users',
+    roles: '/admin/roles',
+    permissions: '/admin/permissions'
   }
 };
 
@@ -268,6 +270,72 @@ class PortfolioAPI {
 
   async toggleUserStatus(id) {
     return apiClient.patch(`${endpoints.admin.users}/${id}/toggle-status`);
+  }
+
+  async assignRole(userId, roleId) {
+    return apiClient.post(`${endpoints.admin.users}/assign-role`, { user_id: userId, role_id: roleId });
+  }
+
+  async getUserPermissions(id) {
+    return apiClient.get(`${endpoints.admin.users}/${id}/permissions`);
+  }
+
+  // Role Management
+  async getRoles() {
+    return apiClient.get(endpoints.admin.roles);
+  }
+
+  async getRole(id) {
+    return apiClient.get(`${endpoints.admin.roles}/${id}`);
+  }
+
+  async createRole(roleData) {
+    return apiClient.post(endpoints.admin.roles, roleData);
+  }
+
+  async updateRole(id, roleData) {
+    return apiClient.put(`${endpoints.admin.roles}/${id}`, roleData);
+  }
+
+  async deleteRole(id) {
+    return apiClient.delete(`${endpoints.admin.roles}/${id}`);
+  }
+
+  async assignPermissions(roleId, permissionIds) {
+    return apiClient.post(`${endpoints.admin.roles}/${roleId}/permissions`, { permission_ids: permissionIds });
+  }
+
+  async getRolePermissions(id) {
+    return apiClient.get(`${endpoints.admin.roles}/${id}/permissions`);
+  }
+
+  // Permission Management
+  async getPermissions() {
+    return apiClient.get(endpoints.admin.permissions);
+  }
+
+  async getPermission(id) {
+    return apiClient.get(`${endpoints.admin.permissions}/${id}`);
+  }
+
+  async createPermission(permissionData) {
+    return apiClient.post(endpoints.admin.permissions, permissionData);
+  }
+
+  async updatePermission(id, permissionData) {
+    return apiClient.put(`${endpoints.admin.permissions}/${id}`, permissionData);
+  }
+
+  async deletePermission(id) {
+    return apiClient.delete(`${endpoints.admin.permissions}/${id}`);
+  }
+
+  async getPermissionsByResource(resource) {
+    return apiClient.get(`${endpoints.admin.permissions}/resource/${resource}`);
+  }
+
+  async initializeDefaultPermissions() {
+    return apiClient.post(`${endpoints.admin.permissions}/initialize`);
   }
 }
 

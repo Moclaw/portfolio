@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { SectionWrapper } from '../../../../shared/hoc';
 import { slideIn } from '../../../../shared/utils/motion';
 import { styles } from '../../../../shared/styles';
+import { useToast } from '../../../../shared/context/ToastContext';
 import contactAPI from '../../../../shared/services/contactApi';
 
 const Contact = () => {
@@ -15,6 +16,7 @@ const Contact = () => {
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
+  const { showSuccess, showError } = useToast();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -30,12 +32,15 @@ const Contact = () => {
       const response = await contactAPI.submitContact(form);
       
       if (response.success) {
+        showSuccess('Cảm ơn bạn! Tin nhắn đã được gửi thành công.');
         setMessage({ text: 'Thank you! Your message has been sent successfully.', type: 'success' });
         setForm({ name: '', email: '', subject: '', message: '' });
       } else {
+        showError(response.message || 'Gửi tin nhắn thất bại. Vui lòng thử lại.');
         setMessage({ text: response.message || 'Failed to send message. Please try again.', type: 'error' });
       }
     } catch (error) {
+      showError('Lỗi kết nối mạng. Vui lòng thử lại sau.');
       setMessage({ text: 'Network error. Please try again later.', type: 'error' });
     } finally {
       setLoading(false);

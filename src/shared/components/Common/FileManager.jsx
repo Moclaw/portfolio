@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useToast } from '../../context/ToastContext';
+import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
 import FileUpload from './FileUpload';
 
@@ -12,6 +14,8 @@ const FileManager = ({
   showUpload = true,
   className = "" 
 }) => {
+  const { showSuccess, showError, showWarning } = useToast();
+  const { showConfirm } = useModal();
   const [files, setFiles] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -66,10 +70,11 @@ const FileManager = ({
       if (onFileDeleted) {
         onFileDeleted(fileId);
       }
+      showSuccess('Xóa file thành công!');
       // Refresh the files to get updated pagination
       await fetchFiles(currentPage, searchTerm);
     } catch (error) {
-      alert('Failed to delete file. Please try again.');
+      showError('Xóa file thất bại. Vui lòng thử lại.');
     } finally {
       setDeletingFileId(null);
     }
@@ -78,12 +83,15 @@ const FileManager = ({
   // Handle bulk file deletion
   const handleBulkDelete = async () => {
     if (selectedFiles.length === 0) {
-      alert('Please select files to delete.');
+      showWarning('Vui lòng chọn file để xóa.');
       return;
     }
 
-    const confirmMessage = `Are you sure you want to delete ${selectedFiles.length} file(s)? This action cannot be undone.`;
-    if (!confirm(confirmMessage)) {
+    const confirmed = await showConfirm(
+      `Bạn có chắc chắn muốn xóa ${selectedFiles.length} file(s)? Hành động này không thể hoàn tác.`,
+      'Xác nhận xóa hàng loạt'
+    );
+    if (!confirmed) {
       return;
     }
 
@@ -113,15 +121,15 @@ const FileManager = ({
 
       // Show result message
       if (deletedFileIds.length === selectedFiles.length) {
-        alert(`Successfully deleted ${deletedFileIds.length} file(s).`);
+        showSuccess(`Xóa thành công ${deletedFileIds.length} file(s).`);
       } else {
-        alert(`Deleted ${deletedFileIds.length} out of ${selectedFiles.length} file(s). Some files could not be deleted.`);
+        showWarning(`Đã xóa ${deletedFileIds.length} trong số ${selectedFiles.length} file(s). Một số file không thể xóa.`);
       }
 
       // Refresh the files to get updated pagination
       await fetchFiles(currentPage, searchTerm);
     } catch (error) {
-      alert('An error occurred during bulk deletion. Please try again.');
+      showError('Có lỗi xảy ra khi xóa hàng loạt. Vui lòng thử lại.');
     } finally {
       setBulkDeleting(false);
     }

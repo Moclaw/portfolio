@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../../../shared/context/AuthContext';
+import { useToast } from '../../../../shared/context/ToastContext';
 import api from '../../../../shared/services/api';
 import { FileUpload, FileManager } from '../../../../shared/components/Common';
 
@@ -18,6 +19,7 @@ const UploadManager = () => {
   const [recentUploads, setRecentUploads] = useState([]);
 
   const { user } = useAuth();
+  const { showSuccess, showError } = useToast();
 
   // Fetch upload statistics
   const fetchStats = async () => {
@@ -67,12 +69,14 @@ const UploadManager = () => {
 
   const handleUploadSuccess = (file, allFiles) => {
     // Refresh stats after successful upload
+    showSuccess(`Tải lên thành công: ${file.filename}`);
     fetchStats();
     setRecentUploads(prev => [file, ...prev.slice(0, 4)]);
   };
 
   const handleFileDeleted = (fileId) => {
     // Refresh stats after file deletion
+    showSuccess('Xóa file thành công!');
     fetchStats();
   };
 
@@ -209,7 +213,7 @@ const UploadManager = () => {
                   <FileUpload
                     onUploadSuccess={handleUploadSuccess}
                     onUploadError={(error) => {
-                      alert('Upload failed: ' + error.message);
+                      showError('Tải lên thất bại: ' + error.message);
                     }}
                     multiple={true}
                     maxSize={50 * 1024 * 1024} // 50MB

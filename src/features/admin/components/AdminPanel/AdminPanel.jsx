@@ -4,9 +4,14 @@ import { slideIn } from '../../../../shared/utils/motion';
 import CountsDashboard from '../CountsDashboard';
 import DragDropList from '../DragDropList/DragDropList';
 import UploadManager from '../UploadManager/UploadManager';
+import AdminRoles from '../AdminRoles/AdminRoles';
+import AdminPermissions from '../AdminPermissions/AdminPermissions';
 import api from '../../../../shared/services/api';
 import FileUpload from '../../../../shared/components/Common/FileUpload';
 import { useAuth } from '../../../../shared/context/AuthContext';
+import { useToast } from '../../../../shared/context/ToastContext';
+import { useModal } from '../../../../shared/context/ModalContext';
+import PermissionGuard from '../../../../shared/components/Common/PermissionGuard';
 
 const AdminPanel = ({ onClose, isPage = false }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -24,44 +29,47 @@ const AdminPanel = ({ onClose, isPage = false }) => {
     username: '',
     email: '',
     password: '',
-    role: 'user'
+    role: 'user',
+    role_id: null
   });
   const [editingUser, setEditingUser] = useState(null);
   const [showUserCreateForm, setShowUserCreateForm] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [newPassword, setNewPassword] = useState('');
+  const [roles, setRoles] = useState([]);
 
-  const { token, API_BASE_URL, user } = useAuth();
+  const { token, API_BASE_URL, user, hasAnyPermission, hasPermission } = useAuth();
+  const { showError } = useToast();
+  const { showConfirm } = useModal();
 
-  // Check if user is admin
-  if (!user || user.role !== 'admin') {
-    return (
-      <div className={isPage 
-        ? "min-h-screen pt-20 bg-primary flex items-center justify-center" 
-        : "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-      }>
-        <div className="bg-tertiary rounded-2xl p-8 text-center">
-          <h2 className="text-white text-xl mb-4">Access Denied</h2>
-          <p className="text-secondary mb-4">You need admin privileges to access this panel.</p>
-          {!isPage && (
-            <button
-              onClick={onClose}
-              className="bg-secondary hover:bg-secondary/80 text-white px-6 py-2 rounded-lg"
-            >
-              Close
-            </button>
-          )}
-          {isPage && (
-            <a
-              href="/"
-              className="bg-secondary hover:bg-secondary/80 text-white px-6 py-2 rounded-lg inline-block"
-            >
-              Go to Homepage
-            </a>
-          )}
-        </div>
-      </div>
-    );
+  // Check if user has any admin permissions (at least read access to any resource)
+  const canAccessAdminPanel = user && (
+    user.role === 'admin' || 
+    hasAnyPermission(['users:read', 'projects:read', 'experiences:read', 'technologies:read', 'services:read', 'testimonials:read', 'contacts:read', 'roles:read', 'permissions:read'])
+  );
+
+  // Auto-show access denied toast and close
+  useEffect(() => {
+    if (!canAccessAdminPanel) {
+      showError("You don't have permission to access the admin panel.", {
+        title: "Access Denied",
+        duration: 2000,
+      });
+      
+      // Close modal/redirect after showing toast
+      const timer = setTimeout(() => {
+        if (onClose && !isPage) {
+          onClose();
+        }
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [canAccessAdminPanel, onClose, isPage, showError]);
+
+  // Return null if access denied
+  if (!canAccessAdminPanel) {
+    return null;
   }
 
   const tabs = [
@@ -73,6 +81,8 @@ const AdminPanel = ({ onClose, isPage = false }) => {
     { id: 'testimonials', name: 'Testimonials', endpoint: 'testimonials' },
     { id: 'contacts', name: 'Contacts', endpoint: 'contacts' },
     { id: 'users', name: 'Users', endpoint: 'users' },
+    { id: 'roles', name: 'Roles', endpoint: null },
+    { id: 'permissions', name: 'Permissions', endpoint: null },
     { id: 'uploads', name: 'File Manager', endpoint: null },
   ];
 
@@ -119,14 +129,21 @@ const AdminPanel = ({ onClose, isPage = false }) => {
         } else {
           setData(prev => ({ ...prev, [endpoint]: Array.isArray(result) ? result : result[endpoint] || [] }));
         }
-      } else {
-        setError('Failed to fetch data');
-      }
+      } 
     } catch (error) {
       setError('Network error occurred');
     }
 
     setIsLoading(false);
+  };
+
+  const fetchRoles = async () => {
+    try {
+      const response = await api.getRoles();
+      setRoles(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+    }
   };
 
   const handleCreate = async (endpoint, itemData) => {
@@ -141,15 +158,16 @@ const AdminPanel = ({ onClose, isPage = false }) => {
       });
 
       if (response.ok) {
+        showSuccess('Tạo mới thành công!');
         await fetchData(endpoint);
         setEditingItem(null);
         setFormData({});
       } else {
         const errorData = await response.json();
-        setError(errorData.error || 'Failed to create item');
+        showError(errorData.error || 'Tạo mới thất bại');
       }
     } catch (error) {
-      setError('Network error occurred');
+      showError('Lỗi kết nối mạng');
     }
   };
 
@@ -165,20 +183,23 @@ const AdminPanel = ({ onClose, isPage = false }) => {
       });
 
       if (response.ok) {
+        showSuccess('Cập nhật thành công!');
         await fetchData(endpoint);
         setEditingItem(null);
         setFormData({});
       } else {
         const errorData = await response.json();
-        setError(errorData.error || 'Failed to update item');
+        showError(errorData.error || 'Cập nhật thất bại');
       }
     } catch (error) {
-      setError('Network error occurred');
+      showError('Lỗi kết nối mạng');
     }
   };
 
   const handleDelete = async (endpoint, id) => {
-    if (!confirm('Are you sure you want to delete this item?')) return;
+    // Show confirm modal instead of window.confirm
+    const confirmed = await showConfirm('Bạn có chắc chắn muốn xóa mục này?', 'Xác nhận xóa');
+    if (!confirmed) return;
 
     try {
       const response = await fetch(`${API_BASE_URL}/admin/${endpoint}/${id}`, {
@@ -190,13 +211,14 @@ const AdminPanel = ({ onClose, isPage = false }) => {
       });
 
       if (response.ok) {
+        showSuccess('Xóa thành công!');
         await fetchData(endpoint);
       } else {
         const errorData = await response.json();
-        setError(errorData.error || 'Failed to delete item');
+        showError(errorData.error || 'Xóa thất bại');
       }
     } catch (error) {
-      setError('Network error occurred');
+      showError('Lỗi kết nối mạng');
     }
   };
 
@@ -241,6 +263,9 @@ const AdminPanel = ({ onClose, isPage = false }) => {
     tabsWithEndpoints.forEach(tab => {
       fetchData(tab.endpoint);
     });
+    
+    // Fetch roles for user management
+    fetchRoles();
   }, []); // Only run once on mount
 
   useEffect(() => {
@@ -259,7 +284,7 @@ const AdminPanel = ({ onClose, isPage = false }) => {
     
     // Don't allow creating contacts from admin panel
     if (activeTab === 'contacts') {
-      setError('Contacts can only be created through the contact form');
+      showError('Liên hệ chỉ có thể được tạo thông qua form liên hệ');
       return;
     }
     
@@ -961,6 +986,10 @@ const AdminPanel = ({ onClose, isPage = false }) => {
     }
     
     const fields = getFormFields(activeTab);
+    
+    // Check if user can update this resource
+    const canUpdate = hasPermission(activeTab, 'update');
+    const canCreate = hasPermission(activeTab, 'create');
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -1031,18 +1060,20 @@ const AdminPanel = ({ onClose, isPage = false }) => {
                         name={field.name}
                         value={formData[field.name] || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
-                        className="w-full bg-primary border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-secondary"
+                        className="w-full bg-primary border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder={field.placeholder}
                         rows={4}
                         required={field.required}
+                        disabled={editingItem && editingItem.id ? !canUpdate : !canCreate}
                       />
                     ) : field.type === 'select' ? (
                       <select
                         name={field.name}
                         value={formData[field.name] || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
-                        className="w-full bg-primary border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-secondary"
+                        className="w-full bg-primary border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                         required={field.required}
+                        disabled={editingItem && editingItem.id ? !canUpdate : !canCreate}
                       >
                         <option value="">Select {field.label}</option>
                         {field.options.map(option => (
@@ -1057,9 +1088,10 @@ const AdminPanel = ({ onClose, isPage = false }) => {
                         name={field.name}
                         value={formData[field.name] || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
-                        className="w-full bg-primary border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-secondary"
+                        className="w-full bg-primary border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder={field.placeholder}
                         required={field.required}
+                        disabled={editingItem && editingItem.id ? !canUpdate : !canCreate}
                       />
                     )}
                   </div>
@@ -1069,7 +1101,8 @@ const AdminPanel = ({ onClose, isPage = false }) => {
               <div className="flex gap-3 mt-6 pt-4 border-t border-gray-600">
                 <button
                   type="submit"
-                  className="bg-secondary hover:bg-secondary/80 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                  disabled={editingItem && editingItem.id ? !canUpdate : !canCreate}
+                  className="bg-secondary hover:bg-secondary/80 text-white px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {editingItem && editingItem.id ? 'Update' : 'Create'}
                 </button>
@@ -1441,12 +1474,18 @@ const AdminPanel = ({ onClose, isPage = false }) => {
     const handleCreateUser = async (e) => {
       e.preventDefault();
       try {
-        await api.createUser(userForm);
-        setUserForm({ username: '', email: '', password: '', role: 'user' });
+        const userData = { ...userForm };
+        // If role_id is selected, use it; otherwise fallback to role string
+        if (userData.role_id) {
+          userData.role_id = parseInt(userData.role_id);
+        }
+        await api.createUser(userData);
+        showSuccess('Tạo user thành công!');
+        setUserForm({ username: '', email: '', password: '', role: 'user', role_id: null });
         setShowUserCreateForm(false);
         await fetchData('users');
       } catch (error) {
-        alert('Failed to create user');
+        showError('Tạo user thất bại');
       }
     };
 
@@ -1454,38 +1493,45 @@ const AdminPanel = ({ onClose, isPage = false }) => {
       e.preventDefault();
       try {
         const { password, ...updateData } = userForm;
+        // If role_id is selected, use it; otherwise fallback to role string
+        if (updateData.role_id) {
+          updateData.role_id = parseInt(updateData.role_id);
+        }
         await api.updateUser(editingUser.id, updateData);
+        showSuccess('Cập nhật user thành công!');
         setEditingUser(null);
-        setUserForm({ username: '', email: '', password: '', role: 'user' });
+        setUserForm({ username: '', email: '', password: '', role: 'user', role_id: null });
         await fetchData('users');
       } catch (error) {
-        alert('Failed to update user');
+        showError('Cập nhật user thất bại');
       }
     };
 
     const handleUpdatePassword = async (e) => {
       e.preventDefault();
       if (!newPassword || newPassword.length < 6) {
-        alert('Password must be at least 6 characters');
+        showError('Mật khẩu phải có ít nhất 6 ký tự');
         return;
       }
       try {
         await api.updateUserPassword(editingUser.id, newPassword);
+        showSuccess('Cập nhật mật khẩu thành công!');
         setShowPasswordForm(false);
         setNewPassword('');
-        alert('Password updated successfully');
       } catch (error) {
-        alert('Failed to update password');
+        showError('Cập nhật mật khẩu thất bại');
       }
     };
 
     const handleDeleteUser = async (userId) => {
-      if (confirm('Are you sure you want to delete this user?')) {
+      const confirmed = await showConfirm('Bạn có chắc chắn muốn xóa user này?', 'Xác nhận xóa user');
+      if (confirmed) {
         try {
           await api.deleteUser(userId);
+          showSuccess('Xóa user thành công!');
           await fetchData('users');
         } catch (error) {
-          alert('Failed to delete user');
+          showError('Xóa user thất bại');
         }
       }
     };
@@ -1493,9 +1539,10 @@ const AdminPanel = ({ onClose, isPage = false }) => {
     const handleToggleStatus = async (userId) => {
       try {
         await api.toggleUserStatus(userId);
+        showSuccess('Cập nhật trạng thái thành công!');
         await fetchData('users');
       } catch (error) {
-        alert('Failed to toggle user status');
+        showError('Cập nhật trạng thái thất bại');
       }
     };
 
@@ -1505,7 +1552,8 @@ const AdminPanel = ({ onClose, isPage = false }) => {
         username: user.username,
         email: user.email,
         password: '',
-        role: user.role
+        role: user.role,
+        role_id: user.role_id || null
       });
       setShowUserCreateForm(false);
     };
@@ -1575,13 +1623,33 @@ const AdminPanel = ({ onClose, isPage = false }) => {
                     Role
                   </label>
                   <select
-                    value={userForm.role}
-                    onChange={(e) => setUserForm(prev => ({ ...prev, role: e.target.value }))}
+                    value={userForm.role_id || userForm.role}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value && !isNaN(value)) {
+                        // It's a role_id
+                        setUserForm(prev => ({ ...prev, role_id: parseInt(value), role: '' }));
+                      } else {
+                        // It's a legacy role string
+                        setUserForm(prev => ({ ...prev, role: value, role_id: null }));
+                      }
+                    }}
                     className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white"
                   >
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
+                    {/* Legacy roles for backward compatibility */}
+                    <option value="user">User (Legacy)</option>
+                    <option value="admin">Admin (Legacy)</option>
+                    
+                    {/* New role-based system */}
+                    {roles.map(role => (
+                      <option key={role.id} value={role.id}>
+                        {role.name} - {role.description}
+                      </option>
+                    ))}
                   </select>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Choose from new role-based system for better permission control
+                  </p>
                 </div>
               </div>
 
@@ -1597,7 +1665,7 @@ const AdminPanel = ({ onClose, isPage = false }) => {
                   onClick={() => {
                     setShowUserCreateForm(false);
                     setEditingUser(null);
-                    setUserForm({ username: '', email: '', password: '', role: 'user' });
+                    setUserForm({ username: '', email: '', password: '', role: 'user', role_id: null });
                   }}
                   className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md"
                 >
@@ -1655,19 +1723,21 @@ const AdminPanel = ({ onClose, isPage = false }) => {
         <div className="bg-gray-800 rounded-lg overflow-hidden">
           <div className="p-4 border-b border-gray-700 flex justify-between items-center">
             <h3 className="text-white text-lg font-medium">Users</h3>
-            <button
-              onClick={() => {
-                setShowUserCreateForm(true);
-                setEditingUser(null);
-                setUserForm({ username: '', email: '', password: '', role: 'user' });
-              }}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md flex items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Add User
-            </button>
+            <PermissionGuard resource="users" action="create" disableInsteadOfHide={true}>
+              <button
+                onClick={() => {
+                  setShowUserCreateForm(true);
+                  setEditingUser(null);
+                  setUserForm({ username: '', email: '', password: '', role: 'user', role_id: null });
+                }}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add User
+              </button>
+            </PermissionGuard>
           </div>
 
           <div className="overflow-x-auto">
@@ -1688,13 +1758,20 @@ const AdminPanel = ({ onClose, isPage = false }) => {
                     <td className="px-4 py-3 text-sm text-white">{user.username}</td>
                     <td className="px-4 py-3 text-sm text-white">{user.email}</td>
                     <td className="px-4 py-3 text-sm">
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        user.role === 'admin' 
-                          ? 'bg-purple-600 text-white' 
-                          : 'bg-gray-600 text-white'
-                      }`}>
-                        {user.role}
-                      </span>
+                      <div className="flex flex-col space-y-1">
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          user.role === 'admin' 
+                            ? 'bg-purple-600 text-white' 
+                            : 'bg-gray-600 text-white'
+                        }`}>
+                          {user.role} {user.role && '(Legacy)'}
+                        </span>
+                        {user.user_role && (
+                          <span className="px-2 py-1 rounded-full text-xs bg-blue-600 text-white">
+                            {user.user_role.name}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <span className={`px-2 py-1 rounded-full text-xs ${
@@ -1710,25 +1787,30 @@ const AdminPanel = ({ onClose, isPage = false }) => {
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <div className="flex gap-2">
-                        <button
-                          onClick={() => startEdit(user)}
-                          className="text-blue-400 hover:text-blue-300"
-                          title="Edit user"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => startPasswordEdit(user)}
-                          className="text-yellow-400 hover:text-yellow-300"
-                          title="Change password"
-                        >
+                        <PermissionGuard resource="users" action="update" disableInsteadOfHide={true}>
+                          <button
+                            onClick={() => startEdit(user)}
+                            className="text-blue-400 hover:text-blue-300"
+                            title="Edit user"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
+                        </PermissionGuard>
+                        <PermissionGuard resource="users" action="update" disableInsteadOfHide={true}>
+                          <button
+                            onClick={() => startPasswordEdit(user)}
+                            className="text-yellow-400 hover:text-yellow-300"
+                            title="Change password"
+                          >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                           </svg>
                         </button>
-                        <button
+                        </PermissionGuard>
+                        <PermissionGuard resource="users" action="update" disableInsteadOfHide={true}>
+                          <button
                           onClick={() => handleToggleStatus(user.id)}
                           className={user.is_active ? 'text-orange-400 hover:text-orange-300' : 'text-green-400 hover:text-green-300'}
                           title={user.is_active ? 'Deactivate user' : 'Activate user'}
@@ -1737,7 +1819,9 @@ const AdminPanel = ({ onClose, isPage = false }) => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
                           </svg>
                         </button>
-                        <button
+                        </PermissionGuard>
+                        <PermissionGuard resource="users" action="delete" disableInsteadOfHide={true}>
+                          <button
                           onClick={() => handleDeleteUser(user.id)}
                           className="text-red-400 hover:text-red-300"
                           title="Delete user"
@@ -1746,6 +1830,7 @@ const AdminPanel = ({ onClose, isPage = false }) => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
                         </button>
+                        </PermissionGuard>
                       </div>
                     </td>
                   </tr>
@@ -1773,6 +1858,32 @@ const AdminPanel = ({ onClose, isPage = false }) => {
     // Special case for uploads tab
     if (activeTab === 'uploads') {
       return <UploadManager />;
+    }
+
+    // Special case for roles tab
+    if (activeTab === 'roles') {
+      return (
+        <PermissionGuard 
+          resource="roles" 
+          action="read"
+          fallback={<div className="text-center py-8"><p className="text-red-500">You don't have permission to view roles.</p></div>}
+        >
+          <AdminRoles />
+        </PermissionGuard>
+      );
+    }
+
+    // Special case for permissions tab
+    if (activeTab === 'permissions') {
+      return (
+        <PermissionGuard 
+          resource="permissions" 
+          action="read"
+          fallback={<div className="text-center py-8"><p className="text-red-500">You don't have permission to view permissions.</p></div>}
+        >
+          <AdminPermissions />
+        </PermissionGuard>
+      );
     }
 
     // Special case for users tab
@@ -2016,29 +2127,33 @@ const AdminPanel = ({ onClose, isPage = false }) => {
               </div>
               {activeTab !== 'contacts' && activeTab !== 'dashboard' && activeTab !== 'uploads' && activeTab !== 'users' && (
                 <div className="flex gap-3">
-                  <button
-                    onClick={() => setIsOrderMode(!isOrderMode)}
-                    className={`px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-all duration-300 transform hover:scale-105 ${
-                      isOrderMode
-                        ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg shadow-blue-500/25'
-                        : 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white shadow-lg shadow-purple-500/25'
-                    }`}
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                    </svg>
-                    {isOrderMode ? 'Exit Order Mode' : 'Manage Order'}
-                  </button>
-                  {!isOrderMode && (
+                  <PermissionGuard resource={activeTab} action="update" disableInsteadOfHide={true}>
                     <button
-                      onClick={startCreate}
-                      className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-green-500/25"
+                      onClick={() => setIsOrderMode(!isOrderMode)}
+                      className={`px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-all duration-300 transform hover:scale-105 ${
+                        isOrderMode
+                          ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg shadow-blue-500/25'
+                          : 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white shadow-lg shadow-purple-500/25'
+                      }`}
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
                       </svg>
-                      Add New
+                      {isOrderMode ? 'Exit Order Mode' : 'Manage Order'}
                     </button>
+                  </PermissionGuard>
+                  {!isOrderMode && (
+                    <PermissionGuard resource={activeTab} action="create" disableInsteadOfHide={true}>
+                      <button
+                        onClick={startCreate}
+                        className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-green-500/25"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        Add New
+                      </button>
+                    </PermissionGuard>
                   )}
                 </div>
               )}

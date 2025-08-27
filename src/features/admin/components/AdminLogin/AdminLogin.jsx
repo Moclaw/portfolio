@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from "../../../../shared/context/AuthContext";
+import { useToast } from "../../../../shared/context/ToastContext";
 import { slideIn } from "../../../../shared/utils/motion";
 import { styles } from "../../../../shared/styles.js";
 
@@ -21,6 +22,7 @@ const AdminLogin = () => {
   });
 
   const { login, register, isAuthenticated, user } = useAuth();
+  const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
 
   // Redirect if already authenticated and admin
@@ -60,8 +62,10 @@ const AdminLogin = () => {
     const result = await login(formData.username, formData.password);
     
     if (result.success) {
+      showSuccess('Đăng nhập thành công!');
       // Navigation will be handled by useEffect after auth state update
     } else {
+      showError(result.error || 'Đăng nhập thất bại');
       setError(result.error);
     }
     
@@ -74,6 +78,7 @@ const AdminLogin = () => {
     setError('');
 
     if (registerData.password !== registerData.confirmPassword) {
+      showError('Mật khẩu không khớp');
       setError('Passwords do not match');
       setIsLoading(false);
       return;
@@ -82,7 +87,7 @@ const AdminLogin = () => {
     const result = await register(registerData.username, registerData.email, registerData.password);
     
     if (result.success) {
-      alert('Registration successful! You can now login.');
+      showSuccess('Đăng ký thành công! Bạn có thể đăng nhập ngay.');
       setIsRegistering(false);
       setRegisterData({
         username: '',
@@ -91,6 +96,7 @@ const AdminLogin = () => {
         confirmPassword: ''
       });
     } else {
+      showError(result.error || 'Đăng ký thất bại');
       setError(result.error);
     }
     

@@ -7,6 +7,7 @@ import { github } from "../../../../shared/assets";
 import { SectionWrapper } from "../../../../shared/hoc";
 import { getFullImageUrl } from "../../../../shared/utils/urlHelper";
 import { usePortfolioData } from "../../../../shared/constants/dynamic";
+import { useModal } from "../../../../shared/context/ModalContext";
 import { fadeIn, textVariant } from "../../../../shared/utils/motion";
 
 const ProjectCard = ({
@@ -18,6 +19,7 @@ const ProjectCard = ({
   source_code_link,
 }) => {
   const [showFullDesc, setShowFullDesc] = useState(false);
+  const { showOpenUrl } = useModal();
 
   const isLongDesc = description.length > 120;
   const shortDesc = isLongDesc ? description.slice(0, 120) + "..." : description;
@@ -44,7 +46,7 @@ const ProjectCard = ({
 
           <div className='absolute inset-0 flex justify-end m-3 card-img_hover'>
             <div
-              onClick={() => window.open(source_code_link, "_blank")}
+              onClick={() => showOpenUrl(source_code_link, `Mở source code của ${name}`)}
               className='black-gradient w-10 h-10 rounded-full flex justify-center items-center cursor-pointer'
             >
               <img

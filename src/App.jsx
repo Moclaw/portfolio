@@ -6,6 +6,8 @@ import { Contact } from './features/contact';
 import { AdminRoute, AdminContacts } from './features/admin';
 import { PortfolioProvider } from './shared/context/PortfolioContext';
 import { AuthProvider } from './shared/context/AuthContext';
+import { ToastProvider } from './shared/context/ToastContext';
+import { ModalProvider } from './shared/context/ModalContext';
 
 const Experience = lazy(() => import('./features/experience').then(module => ({ default: module.Experience })));
 const About = lazy(() => import('./features/about').then(module => ({ default: module.About })));
@@ -17,7 +19,9 @@ const App = () => {
 	return (
 		<ErrorBoundary>
 			<AuthProvider>
-				<PortfolioProvider>
+				<ToastProvider>
+					<ModalProvider>
+						<PortfolioProvider>
 					<BrowserRouter>
 						<Routes>
 							{/* Admin Routes */}
@@ -44,8 +48,10 @@ const App = () => {
 						</Routes>
 					</BrowserRouter>
 				</PortfolioProvider>
-			</AuthProvider>
-		</ErrorBoundary>
+			</ModalProvider>
+		</ToastProvider>
+	</AuthProvider>
+</ErrorBoundary>
 	);
 }
 

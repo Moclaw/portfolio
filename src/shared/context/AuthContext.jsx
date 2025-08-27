@@ -15,6 +15,7 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [permissions, setPermissions] = useState([]);
 
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5303';
 
@@ -33,8 +34,9 @@ export const AuthProvider = ({ children }) => {
         });
 
         if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
+          const data = await response.json();
+          setUser(data.user || data);
+          setPermissions(data.permissions || []);
           setIsAuthenticated(true);
         } else {
           localStorage.removeItem('token');
@@ -64,6 +66,7 @@ export const AuthProvider = ({ children }) => {
       if (response.ok) {
         setToken(data.token);
         setUser(data.user);
+        setPermissions(data.permissions || []);
         setIsAuthenticated(true);
         localStorage.setItem('token', data.token);
         return { success: true, user: data.user };
@@ -100,20 +103,57 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     setToken(null);
+    setPermissions([]);
     setIsAuthenticated(false);
     localStorage.removeItem('token');
     // Let the calling component handle navigation
   };
+
+  // Permission checking functions
+  const hasPermission = (resource, action) => {
+    if (!permissions || permissions.length === 0) return false;
+    
+    // Admin has all permissions
+    if (user?.role === 'admin' || (user?.user_role && user.user_role.name === 'admin')) {
+      return true;
+    }
+    
+    const permissionKey = `${resource}:${action}`;
+    return permissions.includes(permissionKey);
+  };
+
+  const hasAnyPermission = (permissionList) => {
+    if (!permissions || permissions.length === 0) return false;
+    
+    // Admin has all permissions
+    if (user?.role === 'admin' || (user?.user_role && user.user_role.name === 'admin')) {
+      return true;
+    }
+    
+    return permissionList.some(permission => permissions.includes(permission));
+  };
+
+  const canRead = (resource) => hasPermission(resource, 'read');
+  const canCreate = (resource) => hasPermission(resource, 'create');
+  const canUpdate = (resource) => hasPermission(resource, 'update');
+  const canDelete = (resource) => hasPermission(resource, 'delete');
 
   const value = {
     user,
     token,
     isLoading,
     isAuthenticated,
+    permissions,
     login,
     register,
     logout,
     API_BASE_URL,
+    hasPermission,
+    hasAnyPermission,
+    canRead,
+    canCreate,
+    canUpdate,
+    canDelete,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
