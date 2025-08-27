@@ -15,7 +15,17 @@ export const theme = {
 			card: "0px 35px 120px -15px #403D50",
 		},
 		screens: {
-			xs: "450px",
+			'xs': '450px',
+			'sm': '640px',
+			'md': '768px',
+			'lg': '1024px',
+			'xl': '1280px',
+			'2xl': '1536px',
+			// Additional breakpoints for better responsive design
+			'3xl': '1920px',
+			// Touch device breakpoints
+			'touch': { 'raw': '(hover: none)' },
+			'mouse': { 'raw': '(hover: hover)' },
 		},
 	},
 };
