@@ -14,6 +14,7 @@ const Navbar = () => {
 	const [shouldCollapse, setShouldCollapse] = useState(false);
 	const [authModalOpen, setAuthModalOpen] = useState(false);
 	const [authModalMode, setAuthModalMode] = useState('login');
+	const [isMobile, setIsMobile] = useState(false);
 	const navRef = useRef(null);
 	const menuRef = useRef(null);
 
@@ -39,16 +40,32 @@ const Navbar = () => {
 	// Kiểm tra xem menu có bị tràn không
 	useEffect(() => {
 		const checkNavOverflow = () => {
+			// Update mobile state
+			setIsMobile(window.innerWidth < 768);
+			
 			if (navRef.current && menuRef.current) {
 				const navWidth = navRef.current.offsetWidth;
 				const menuWidth = menuRef.current.scrollWidth;
 				const logoWidth = window.innerWidth < 640 ? 180 : 250; // Responsive logo width
+				
 				// Auth buttons width: varies by screen size and auth state
 				const authButtonsWidth = (() => {
-					if (window.innerWidth < 640) return 120; // Mobile
-					if (window.innerWidth < 768) return isAuthenticated ? 250 : 180; // Tablet
-					return isAuthenticated ? (user?.username ? 320 : 220) : 200; // Desktop
+					if (window.innerWidth < 640) {
+						// Mobile: always collapse auth buttons
+						return 120; 
+					}
+					if (window.innerWidth < 768) {
+						// Tablet
+						return isAuthenticated ? 280 : 180; 
+					}
+					if (window.innerWidth < 1024) {
+						// Small desktop
+						return isAuthenticated ? (user?.username ? 380 : 280) : 220; 
+					}
+					// Large desktop
+					return isAuthenticated ? (user?.username ? 420 : 320) : 250; 
 				})();
+				
 				const padding = window.innerWidth < 640 ? 60 : 120; // Responsive padding
 				
 				// Nếu menu + logo + auth buttons + padding > nav width thì collapse
@@ -110,18 +127,18 @@ const Navbar = () => {
 					</ul>
 
 					{/* Auth Section */}
-					<div className={`${shouldCollapse ? 'hidden' : 'flex'} items-center gap-2 md:gap-3`}>
+					<div className={`${shouldCollapse ? 'hidden' : 'flex'} items-center gap-1 md:gap-2 lg:gap-3`}>
 						{isAuthenticated ? (
-							<div className="flex items-center gap-2 lg:gap-3">
+							<div className="flex items-center gap-1 md:gap-2 lg:gap-3">
 								{user && (
-									<span className="text-secondary text-[12px] lg:text-[14px] xl:text-[16px] hidden lg:block">
+									<span className="text-secondary text-[10px] md:text-[12px] lg:text-[14px] xl:text-[16px] hidden md:block">
 										Hello, <span className="text-white font-medium">{user.username}</span>
 									</span>
 								)}
 								{location.pathname === '/admin' && (
 									<Link
 										to="/"
-										className="bg-white/10 hover:bg-white/20 text-white px-2 py-1.5 md:px-3 md:py-2 rounded-lg text-[12px] md:text-[14px] lg:text-[16px] font-medium transition-colors border border-white/20"
+										className="bg-white/10 hover:bg-white/20 text-white px-2 py-1.5 md:px-3 md:py-2 rounded-lg text-[10px] md:text-[12px] lg:text-[14px] xl:text-[16px] font-medium transition-colors border border-white/20"
 									>
 										Portfolio
 									</Link>
@@ -129,7 +146,7 @@ const Navbar = () => {
 								{user?.role === 'admin' && location.pathname !== '/admin' && (
 									<Link
 										to="/admin"
-										className="bg-white/10 hover:bg-white/20 text-white px-2 py-1.5 md:px-3 md:py-2 rounded-lg text-[12px] md:text-[14px] lg:text-[16px] font-medium transition-colors border border-white/20"
+										className="bg-white/10 hover:bg-white/20 text-white px-2 py-1.5 md:px-3 md:py-2 rounded-lg text-[10px] md:text-[12px] lg:text-[14px] xl:text-[16px] font-medium transition-colors border border-white/20"
 									>
 										Admin
 									</Link>
@@ -141,7 +158,7 @@ const Navbar = () => {
 											navigate('/');
 										}
 									}}
-									className="bg-red-600/80 hover:bg-red-600 text-white px-2 py-1.5 md:px-3 md:py-2 rounded-lg text-[12px] md:text-[14px] lg:text-[16px] font-medium transition-colors"
+									className="bg-red-600/80 hover:bg-red-600 text-white px-2 py-1.5 md:px-3 md:py-2 rounded-lg text-[10px] md:text-[12px] lg:text-[14px] xl:text-[16px] font-medium transition-colors"
 								>
 									Logout
 								</button>
@@ -153,7 +170,7 @@ const Navbar = () => {
 										setAuthModalMode('login');
 										setAuthModalOpen(true);
 									}}
-									className="text-secondary hover:text-white px-2 py-1.5 md:px-3 md:py-2 text-[12px] md:text-[14px] lg:text-[16px] xl:text-[18px] font-medium transition-colors"
+									className="text-secondary hover:text-white px-2 py-1.5 md:px-3 md:py-2 text-[10px] md:text-[12px] lg:text-[14px] xl:text-[16px] font-medium transition-colors"
 								>
 									Login
 								</button>
@@ -162,7 +179,7 @@ const Navbar = () => {
 										setAuthModalMode('signup');
 										setAuthModalOpen(true);
 									}}
-									className="bg-white/10 hover:bg-white/20 text-white px-2 py-1.5 md:px-3 md:py-2 rounded-lg text-[12px] md:text-[14px] lg:text-[16px] xl:text-[18px] font-medium transition-colors border border-white/20"
+									className="bg-white/10 hover:bg-white/20 text-white px-2 py-1.5 md:px-3 md:py-2 rounded-lg text-[10px] md:text-[12px] lg:text-[14px] xl:text-[16px] font-medium transition-colors border border-white/20"
 								>
 									Sign Up
 								</button>
@@ -171,8 +188,8 @@ const Navbar = () => {
 					</div>
 				</div>
 
-				{/* Mobile Menu Button */}
-				<div className={`${shouldCollapse ? 'flex' : 'flex md:hidden'} flex-1 justify-end items-center`}>
+				{/* Mobile Menu Button - Show when collapsed or on mobile */}
+				<div className={`${shouldCollapse || isMobile ? 'flex' : 'hidden'} flex-1 justify-end items-center`}>
 					<img
 						src={toggle ? close : menu}
 						alt='menu'
@@ -225,7 +242,7 @@ const Navbar = () => {
 											<Link
 												to="/admin"
 												onClick={() => setToggle(false)}
-												className="bg-white/10 hover:bg-white/20 text-white px-3 xs:px-3.5 sm:px-4 py-2 rounded-lg text-[14px] xs:text-[15px] sm:text-[16px] font-medium w-full block text-center border border-white/20"
+												className="bg-blue-600/80 hover:bg-blue-600 text-white px-3 xs:px-3.5 sm:px-4 py-2 rounded-lg text-[14px] xs:text-[15px] sm:text-[16px] font-medium w-full block text-center border border-blue-400/20"
 											>
 												Admin Panel
 											</Link>

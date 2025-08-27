@@ -91,6 +91,16 @@ export const AuthProvider = ({ children }) => {
       const data = await response.json();
 
       if (response.ok) {
+        // Nếu backend trả về token và user data ngay sau khi đăng ký
+        if (data.token && data.user) {
+          setToken(data.token);
+          setUser(data.user);
+          setPermissions(data.permissions || []);
+          setIsAuthenticated(true);
+          localStorage.setItem('token', data.token);
+          return { success: true, user: data.user, autoLogin: true };
+        }
+        // Nếu chỉ trả về thông báo đăng ký thành công
         return { success: true, message: data.message };
       } else {
         return { success: false, error: data.error || 'Registration failed' };

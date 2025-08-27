@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
 import { close } from '../../../assets';
@@ -17,6 +18,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
 
   const { login, register } = useAuth();
   const { showSuccess, showError } = useToast();
+  const navigate = useNavigate();
 
   // Prevent body scroll when modal is open
   React.useEffect(() => {
@@ -51,6 +53,10 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
           showSuccess('Login successful!');
           onClose();
           setFormData({ username: '', email: '', password: '', confirmPassword: '' });
+          // Chuyển hướng đến admin panel sau khi login thành công
+          if (result.user?.role === 'admin') {
+            navigate('/admin');
+          }
         } else {
           showError(result.error || 'Login failed');
         }
@@ -64,9 +70,21 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
         
         const result = await register(formData.username, formData.email, formData.password);
         if (result.success) {
-          showSuccess('Registration successful!');
-          setMode('login');
-          setFormData({ username: '', email: '', password: '', confirmPassword: '' });
+          if (result.autoLogin && result.user) {
+            // Nếu backend tự động login sau khi đăng ký
+            showSuccess('Registration successful! Welcome!');
+            onClose();
+            setFormData({ username: '', email: '', password: '', confirmPassword: '' });
+            // Chuyển hướng đến admin panel nếu user là admin
+            if (result.user?.role === 'admin') {
+              navigate('/admin');
+            }
+          } else {
+            // Nếu cần login thủ công sau khi đăng ký
+            showSuccess('Registration successful! Please login to continue.');
+            setMode('login');
+            setFormData({ username: '', email: '', password: '', confirmPassword: '' });
+          }
         } else {
           showError(result.error || 'Registration failed');
         }
